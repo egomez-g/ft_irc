@@ -2,13 +2,15 @@
 
 #include "server.hpp"
 
+#include <string>
+
 class Client
 {
 	private:
-		std::string _name;
-		std::string _password;
-		std::string _server;
+		int socket;
+		std::string nickname;
+		std::string username;
 	public:
-		Client(std::string name, std::string password, std::string server);
-		~Client();
+		Client(int socket);
+		int getSocket() const;
 };

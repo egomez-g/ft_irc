@@ -21,6 +21,11 @@ int Server::initServer(char **argv)
 	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
 		return (perror("setsockopt"), 1);
 
+	if (fcntl(server_fd, F_SETFL, O_NONBLOCK) == -1) 
+		throw std::runtime_error("Error while setting socket to NON-BLOCKING.");
+
+	sockaddr_in serv_address = {};
+	bzero((char *) &serv_address, sizeof(serv_address));
 	adress.sin_family = AF_INET;
 	adress.sin_addr.s_addr = INADDR_ANY;
 	adress.sin_port = htons(port);
@@ -31,29 +36,79 @@ int Server::initServer(char **argv)
 		return(std::cout << "bind failed\n", 1);
 	}
 	addrlen = sizeof(adress);
-	// buffer[1024] = {0};
 
+	if (listen(server_fd, 3) < 0)
+		throw std::runtime_error("Error while listening on socket.");
+
+	pollfd srv = {server_fd, POLLIN, 0};
+	poll_fds.push_back(srv);
 	return (0);
 }
 
 int Server::listenLoop()
 {
-    while (1)
+	while (1)
 	{
-		if (listen(server_fd, 3) < 0)
-			return (std::cout << "listen failed\n", 1);
+        int poll_count = poll(poll_fds.data(), poll_fds.size(), 500000);
+        if (poll_count == -1)
+		{
+            perror("poll");
+            exit(1);
+        }
 
-		if ((new_socket = accept(server_fd, (struct sockaddr *)&adress, (socklen_t*)&addrlen)) < 0)
-			return (std::cout << "accept failed\n",1);
-
-		recv(new_socket, buffer, 1024, 0);
-		std::cout << "Mensaje recibido: "  << buffer << std::endl;
-
-		std::string hello = "Hola desde el servidor";
-		send(new_socket, hello.c_str(), strlen(hello.c_str()), 0);
-		// std::cout << "Mensaje enviado\n";
+        for (size_t i = 0; i < poll_fds.size(); ++i)
+		{
+            if (poll_fds[i].revents & POLLIN)
+			{
+                if (poll_fds[i].fd == server_fd)
+                    acceptNewClient();
+				else
+                    handleClientMessage(poll_fds[i].fd);
+		    }
+		}
 	}
     return (0);
+}
+
+void Server::acceptNewClient()
+{
+    int client_socket = accept(server_fd, NULL, NULL);
+    if (client_socket == -1) {
+        perror("accept");
+        return;
+    }
+
+    fcntl(client_socket, F_SETFL, O_NONBLOCK);
+
+    Client* new_client = new Client(client_socket);
+    clients[client_socket] = new_client;
+
+    pollfd client_pollfd;
+    client_pollfd.fd = client_socket;
+    client_pollfd.events = POLLIN;
+    poll_fds.push_back(client_pollfd);
+
+    std::cout << "New client connected: " << client_socket << std::endl;
+}
+
+void Server::handleClientMessage(int client_socket)
+{
+    char buffer[512];
+    int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
+    if (bytes_received <= 0) {
+        if (bytes_received == 0)
+            std::cout << "Client disconnected: " << client_socket << std::endl;
+        else
+            perror("recv");
+        //removeClient(client_socket);
+        return;
+    }
+
+    buffer[bytes_received] = '\0';
+    std::cout << "Received message from " << client_socket << ": " << buffer << std::endl;
+
+    // Handle the received message (e.g., parse and execute commands)
+    // ...
 }
 
 void Server::closeServer()

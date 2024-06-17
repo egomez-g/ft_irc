@@ -16,6 +16,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "client.hpp"
+
+class Client;
 
 class Server
 {
@@ -24,16 +27,20 @@ class Server
 		int			server_fd;
 		std::string	password;
 
+		std::vector<pollfd> poll_fds;
+		std::map<int, Client*> clients;
+
 		sockaddr_in	adress;
 		int			addrlen;
 		int			new_socket;
-		char		buffer[1024];
-		std::string	lpastor;
+		//char		buffer[1024];
 
 
     public:
         int initServer(char **argv);
         int listenLoop();
         void closeServer();
+		void acceptNewClient();
+		void handleClientMessage(int client_socket);
 };
 

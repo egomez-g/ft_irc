@@ -1,13 +1,8 @@
 #include "client.hpp"
 
-Client::Client(std::string name, std::string password, std::string server)
-{
-	_name = name;
-	_password = password;
-	_server = server;
-}
+Client::Client(int socket) : socket(socket) {}
 
-Client::~Client()
+int Client::getSocket() const
 {
-
+    return (socket);
 }
