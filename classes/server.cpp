@@ -13,6 +13,7 @@ int Server::initServer(char **argv)
 {
 	port = ft_stoi(argv[1]);
 	password = argv[2];
+	password = password + "\n";
 	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 		return (std::cout << "socket failed" << std::endl, 1);
 
@@ -88,27 +89,64 @@ void Server::acceptNewClient()
     client_pollfd.events = POLLIN;
     poll_fds.push_back(client_pollfd);
 
+	checkPassword(client_socket);
+
     std::cout << "New client connected: " << client_socket << std::endl;
+}
+
+void Server::removeClient(int client_socket)
+{
+	std::vector<pollfd>::iterator it;
+
+	for (it = poll_fds.begin(); it != poll_fds.end(); it++)
+	{
+		if (it->fd == client_socket)
+			break ;
+	}
+	if (it != poll_fds.end())
+		poll_fds.erase(it);
+}
+
+void Server::checkPassword(int client_socket)
+{
+	char buffer[512] = {0};
+
+	while (std::strcmp(buffer, password.c_str()))
+    {
+		int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
+    	if (bytes_received <= 0) 
+		{
+    	    if (bytes_received == 0)
+    	        std::cout << "Unconected: " << client_socket << std::endl;
+    	    else
+    	        perror("recv");
+    	    removeClient(client_socket);
+    	    return;
+    	}
+	    buffer[bytes_received] = '\0';
+		if (std::strcmp(buffer, password.c_str()))
+			 std::cout << "Contraseña incorrecta: " << client_socket << std::endl;
+	}
+		std::cout << "CONTNRASEÑAA\n";
 }
 
 void Server::handleClientMessage(int client_socket)
 {
-    char buffer[512];
+    char buffer[512] = {0};
     int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
     if (bytes_received <= 0) {
         if (bytes_received == 0)
             std::cout << "Client disconnected: " << client_socket << std::endl;
         else
             perror("recv");
-        //removeClient(client_socket);
+        removeClient(client_socket);
         return;
     }
+	if (cliente no tiene nickname)
+	if (cliente no tiene password)
 
     buffer[bytes_received] = '\0';
     std::cout << "Received message from " << client_socket << ": " << buffer << std::endl;
-
-    // Handle the received message (e.g., parse and execute commands)
-    // ...
 }
 
 void Server::closeServer()

@@ -42,5 +42,7 @@ class Server
         void closeServer();
 		void acceptNewClient();
 		void handleClientMessage(int client_socket);
+		void removeClient(int client_socket);
+		void checkPassword(int client_socket);
 };
 
