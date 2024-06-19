@@ -13,11 +13,8 @@ int Server::initServer(char **argv)
 {
 	port = ft_stoi(argv[1]);
 	password = argv[2];
-	password = password + "\n";
 	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 		return (std::cout << "socket failed" << std::endl, 1);
-
-	// Configurar el socket para reutilizar la dirección y el puerto
 	int opt = 1;
 	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
 		return (perror("setsockopt"), 1);
@@ -73,8 +70,11 @@ int Server::listenLoop()
 
 void Server::acceptNewClient()
 {
+	std::string msgBuffer;
     int client_socket = accept(server_fd, NULL, NULL);
-    if (client_socket == -1) {
+
+    if (client_socket == -1)
+	{
         perror("accept");
         return;
     }
@@ -89,9 +89,10 @@ void Server::acceptNewClient()
     client_pollfd.events = POLLIN;
     poll_fds.push_back(client_pollfd);
 
-	checkPassword(client_socket);
-
     std::cout << "New client connected: " << client_socket << std::endl;
+
+	msgBuffer = "Insert Password\n";
+	send(client_socket, msgBuffer.c_str(), msgBuffer.length(), 0);
 }
 
 void Server::removeClient(int client_socket)
@@ -107,34 +108,16 @@ void Server::removeClient(int client_socket)
 		poll_fds.erase(it);
 }
 
-void Server::checkPassword(int client_socket)
-{
-	char buffer[512] = {0};
-
-	while (std::strcmp(buffer, password.c_str()))
-    {
-		int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
-    	if (bytes_received <= 0) 
-		{
-    	    if (bytes_received == 0)
-    	        std::cout << "Unconected: " << client_socket << std::endl;
-    	    else
-    	        perror("recv");
-    	    removeClient(client_socket);
-    	    return;
-    	}
-	    buffer[bytes_received] = '\0';
-		if (std::strcmp(buffer, password.c_str()))
-			 std::cout << "Contraseña incorrecta: " << client_socket << std::endl;
-	}
-		std::cout << "CONTNRASEÑAA\n";
-}
-
 void Server::handleClientMessage(int client_socket)
 {
+	if (clients.find(client_socket) == clients.end())
+		return ;
+
     char buffer[512] = {0};
     int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
-    if (bytes_received <= 0) {
+
+	if (bytes_received <= 0) 
+	{
         if (bytes_received == 0)
             std::cout << "Client disconnected: " << client_socket << std::endl;
         else
@@ -142,11 +125,44 @@ void Server::handleClientMessage(int client_socket)
         removeClient(client_socket);
         return;
     }
-	if (cliente no tiene nickname)
-	if (cliente no tiene password)
 
-    buffer[bytes_received] = '\0';
-    std::cout << "Received message from " << client_socket << ": " << buffer << std::endl;
+	if (buffer[bytes_received - 1] == '\n')
+		buffer[bytes_received - 1] = '\0';
+	else
+		buffer[bytes_received] = '\0';
+	
+	//check input spaces tal noseque
+	int i = 0;
+	while (buffer[i] == ' ')
+		++i;
+	if (buffer[i] == '\n')
+		return;
+
+	if (clients.find(client_socket)->second->getPassword() == "")
+	{
+		if (buffer != password)
+		{
+			std::cout << client_socket << " INCORRECT PASSWORD" << std::endl;;
+			removeClient(client_socket);
+			exit (1);
+		}
+		else
+		{
+			clients.find(client_socket)->second->setPassword(buffer);
+			std::cout << client_socket << " CORRECT PASSWORD: " << clients.find(client_socket)->second->getPassword() << std::endl;
+
+			std::string msgBuffer;
+			msgBuffer = "Insert Username\n";
+			send(client_socket, msgBuffer.c_str(), msgBuffer.length(), 0);
+		}
+	}
+	else if (clients.find(client_socket)->second->getUsername() == "")
+	{
+		clients.find(client_socket)->second->setUsername(buffer);
+		std::cout << client_socket << " USERNAME SET TO " <<  clients.find(client_socket)->second->getUsername() << std::endl;
+	}
+	else
+		std::cout << "Received message from " << clients.find(client_socket)->second->getUsername() << ": " << buffer << std::endl;
 }
 
 void Server::closeServer()
