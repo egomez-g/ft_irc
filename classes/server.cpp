@@ -158,15 +158,89 @@ void Server::handleClientMessage(int client_socket)
 	}
 	else if (clients.find(client_socket)->second->getUsername() == "")
 	{
+		/*TODO: no puede haber 2 nicknames iguales*/
 		clients.find(client_socket)->second->setUsername(buffer);
+		clients.find(client_socket)->second->setNickname(buffer);
 		std::cout << client_socket << " USERNAME SET TO " <<  clients.find(client_socket)->second->getUsername() << std::endl;
 	}
 	else
+	{
 		std::cout << "Received message from " << clients.find(client_socket)->second->getUsername() << ": " << buffer << std::endl;
+		addChannel("Chat", "ua", clients.find(client_socket)->second);
+		if (chats.empty())
+			std::cout << "Obv bb" << std::endl;
+		std::cout << "chat bien?" << chats.begin()->getName() << std::endl;
+	}
+}
+
+bool Server::addChannel(std::string nameChat, std::string nickname, Client *inviter)
+{
+	std::vector<Channel>::iterator it_chat;
+	std::map<int, Client*>::iterator it_nick;
+	
+
+	/*Buscamos si existe el cliente*/
+	
+	for(it_nick = clients.begin(); it_nick != clients.end(); it_nick++)
+	{
+		if (it_nick->second->getNickname() == nickname)
+			break ;
+	}
+	if (it_nick == clients.end())
+		return (false);
+
+	/*Miramos si existe el canal, sino existe lo creamos si existe lo añadimos*/
+	for (it_chat = chats.begin(); it_chat != chats.end(); it_chat++)
+	{
+		if (it_chat->getName() == nameChat)
+			break ;
+	}
+	if (it_chat == chats.end())
+	{
+		//lo creamos
+		std::cout << it_nick->second->getNickname() << std::endl;
+		chats.push_back(Channel(nameChat));
+		addClient(nameChat, inviter);
+		addClient(nameChat, getClientByNickname(nickname));
+	}
+	else
+	{
+		//lo annadimos
+		addClient(nameChat, inviter);
+		addClient(nameChat, getClientByNickname(nickname));
+	}
+
+	return (true);
 }
 
 void Server::closeServer()
 {
 	close(new_socket);
 	close(server_fd);
+}
+
+
+void Server::addClient(std::string nameChat, Client *inviter)
+{
+	std::vector<Channel>::iterator it;
+
+	for (it = chats.begin(); it != chats.end(); it++)
+	{
+		if (it->getName() == nameChat)
+		{
+			it->addFd(inviter);
+		}
+	}
+}
+
+Client *Server::getClientByNickname(std::string nickname)
+{
+	std::map<int, Client*>::iterator it;
+
+	for (it = clients.begin(); it != clients.end(); it++)
+	{
+		if (it->second->getNickname().compare(nickname) == 0)
+			return (it->second);
+	}
+	return (0);
 }
