@@ -55,5 +55,6 @@ class Server
 
 		void addClient(std::string nameChat, Client *inviter);
 		Client *getClientByNickname(std::string nickname);
+		int Server::checkCmd(char *cmd, int client_socket);
 };
 

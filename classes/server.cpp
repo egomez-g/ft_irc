@@ -165,11 +165,10 @@ void Server::handleClientMessage(int client_socket)
 	}
 	else
 	{
+		//check_cmd(); mirar si es un invite o un mensaje o cualquier otra cosa
 		std::cout << "Received message from " << clients.find(client_socket)->second->getUsername() << ": " << buffer << std::endl;
-		addChannel("Chat", "ua", clients.find(client_socket)->second);
-		if (chats.empty())
-			std::cout << "Obv bb" << std::endl;
-		std::cout << "chat bien?" << chats.begin()->getName() << std::endl;
+		//addChannel("Chat", "ua", clients[client_socket]);
+		//std::cout << "chat Created: " << chats.begin()->getName() << std::endl;
 	}
 }
 
@@ -209,7 +208,6 @@ bool Server::addChannel(std::string nameChat, std::string nickname, Client *invi
 		addClient(nameChat, inviter);
 		addClient(nameChat, getClientByNickname(nickname));
 	}
-
 	return (true);
 }
 
@@ -243,4 +241,34 @@ Client *Server::getClientByNickname(std::string nickname)
 			return (it->second);
 	}
 	return (0);
+}
+
+int Server::checkCmd(char *cmd, int client_socket)
+{
+    std::string msgBuffer;
+    msgBuffer = "Insert Username\n";
+    send(client_socket, msgBuffer.c_str(), msgBuffer.length(), 0);
+	
+    if (std::strncmp(cmd, "KICK ", 5))
+    {
+        return (1);
+    }
+    else if (std::strncmp(cmd, "INVITE ", 7))
+    {
+        return (1);
+    }
+    else if (std::strncmp(cmd, "TOPIC ", 6))
+    {
+        return (1);
+    }
+    else if (std::strncmp(cmd, "MODE ", 5))
+    {
+        std::cout << "mode" << std::endl;
+        if (std::strncmp(cmd + 5, "i", 1))
+        {
+            std::cout << "mode i" << std::endl;
+        }
+        return (1);
+    }
+    return (0);
 }
