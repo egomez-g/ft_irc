@@ -4,7 +4,8 @@ Client::Client(pollfd fd)
 {
 	_username = "";
 	_password = "";
-	_pollfd = fd;
+	_loc 	  = "";
+	_poll_fd  = fd;
 }
 
 Client::~Client()
@@ -13,12 +14,17 @@ Client::~Client()
 
 pollfd Client::getPollfd()
 {
-	return (_pollfd);
+	return (_poll_fd);
 }
 
 void Client::setUsername(std::string username)
 {
 	_username = username;
+}
+
+void Client::setLoc(std::string loc)
+{
+	_loc = loc;
 }
 
 std::string Client::getUsername()
@@ -34,6 +40,11 @@ void Client::setPassword(std::string password)
 std::string Client::getPassword()
 {
 	return (_password);
+}
+
+std::string Client::getLoc()
+{
+	return (_loc);
 }
 
 bool	Client::operator==(std::vector<Client>::iterator other)

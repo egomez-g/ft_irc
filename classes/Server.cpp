@@ -2,35 +2,35 @@
 
 int Server::initServer(char **argv)
 {
-	port = std::atoi(argv[1]);
-	password = argv[2];
-	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+	_port = std::atoi(argv[1]);
+	_password = argv[2];
+	if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 		return (std::cout << "socket failed" << std::endl, 1);
 	int opt = 1;
-	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+	if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
 		return (perror("setsockopt"), 1);
 
-	if (fcntl(server_fd, F_SETFL, O_NONBLOCK) == -1) 
+	if (fcntl(_server_fd, F_SETFL, O_NONBLOCK) == -1) 
 		throw std::runtime_error("Error while setting socket to NON-BLOCKING.");
 
 	sockaddr_in serv_address = {};
 	bzero((char *) &serv_address, sizeof(serv_address));
-	adress.sin_family = AF_INET;
-	adress.sin_addr.s_addr = INADDR_ANY;
-	adress.sin_port = htons(port);
+	_adress.sin_family = AF_INET;
+	_adress.sin_addr.s_addr = INADDR_ANY;
+	_adress.sin_port = htons(_port);
 
-	if (bind(server_fd, (struct sockaddr *)&adress, sizeof(adress)) < 0)
+	if (bind(_server_fd, (struct sockaddr *)&_adress, sizeof(_adress)) < 0)
 	{
 		perror("Binding");
 		return(std::cout << "bind failed\n", 1);
 	}
-	addrlen = sizeof(adress);
+	_addrlen = sizeof(_adress);
 
-	if (listen(server_fd, 3) < 0)
+	if (listen(_server_fd, 3) < 0)
 		throw std::runtime_error("Error while listening on socket.");
 
-	pollfd srv = {server_fd, POLLIN, 0};
-	poll_fds.push_back(srv);
+	pollfd srv = {_server_fd, POLLIN, 0};
+	_poll_fds.push_back(srv);
 	return (0);
 }
 
@@ -39,22 +39,22 @@ int Server::listenLoop()
 {
 	while (1)
 	{
-		int poll_count = poll(poll_fds.data(), poll_fds.size(), 500000);
+		int poll_count = poll(_poll_fds.data(), _poll_fds.size(), 500000);
 		if (poll_count == -1)
 		{
 			perror("poll");
 			exit(1);
 		}
 
-		for (size_t i = 0; i < poll_fds.size(); ++i)
+		for (size_t i = 0; i < _poll_fds.size(); ++i)
 		{
-			if (poll_fds[i].revents & POLLIN)
+			if (_poll_fds[i].revents & POLLIN)
 			{
-				if (poll_fds[i].fd == server_fd)
+				if (_poll_fds[i].fd == _server_fd)
 					acceptNewClient();
 				else
 				{
-					client_socket = poll_fds[i].fd;
+					_client_socket = _poll_fds[i].fd;
 					handleClientMessage();
 				}
 		    }
@@ -65,16 +65,16 @@ int Server::listenLoop()
 
 void Server::handleClientMessage()
 {
-	if (getClientByFd(client_socket) == clientes.end())
+	if (!getClientByFd(_client_socket))
 		return ;
 
     char buffer[512] = {0};
-    int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
+    int bytes_received = recv(_client_socket, buffer, sizeof(buffer), 0);
 
 	if (bytes_received <= 0) 
 	{
         if (bytes_received == 0)
-            std::cout << "Client disconnected: " << client_socket << std::endl;
+            std::cout << "Client disconnected: " << _client_socket << std::endl;
         else
             perror("recv");
         removeClient();
@@ -90,26 +90,26 @@ void Server::handleClientMessage()
 		++i;
 	if (buffer[i] == '\n')
 		return;
-	if (getClientByFd(client_socket).getPassword() == "")
+	if (getClientByFd(_client_socket)->getPassword() == "")
 	{
-		if (buffer != password)
+		if (buffer != _password)
 		{
-			std::cout << client_socket << " INCORRECT PASSWORD" << std::endl;
+			std::cout << _client_socket << " INCORRECT _password" << std::endl;
 			removeClient();
 			exit (1); /*TODO no se puede*/
 		}
 		else
 		{
-			getClientByFd(client_socket).setPassword(buffer);
-			send(client_socket, "Insert Username\n", 16, 0);
+			getClientByFd(_client_socket)->setPassword(buffer);
+			send(_client_socket, "Insert Username\n", 16, 0);
 		}
 	}
-	else if (getClientByFd(client_socket).getUsername() == "")
+	else if (getClientByFd(_client_socket)->getUsername() == "")
 	{
-		if(getClientByName(buffer) == clientes.end())
-			getClientByFd(client_socket).setUsername(buffer);
+		if(!getClientByName(buffer))
+			getClientByFd(_client_socket)->setUsername(buffer);
 		else
-			send(client_socket, "Username already exists, try again\n", 35, 0);
+			send(_client_socket, "Username already exists, try again\n", 35, 0);
 	}
 	else
 	{

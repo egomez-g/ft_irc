@@ -1,63 +1,79 @@
 #include "../inc/Server.hpp"
 
-Client	& Server::getClientByFd(int fd)
+Client	* Server::getClientByFd(int fd)
 {
-	std::vector<Client>::iterator i;
+	int clients_size = _clients.size();
 
-	for (i = clientes.begin(); i != clientes.end(); i++)
+	for(int i = 0; i < clients_size; i++)
 	{
-		if (i->getPollfd().fd == fd)
-			return (*i);
+		if (_clients[i].getPollfd().fd == fd)
+			return (&_clients[i]);
 	}
-	return (*i);
+	return (NULL);
 }
 
-Client	& Server::getClientByName(std::string name)
+Client	* Server::getClientByName(std::string name)
 {
-	std::vector<Client>::iterator i;
+	int clients_size = _clients.size();
 
-	for (i = clientes.begin(); i != clientes.end(); i++)
+	for(int i = 0; i < clients_size; i++)
 	{
-		if (i->getUsername() == name)
-			return (*i);
+		if (_clients[i].getUsername() == name)
+			return (&_clients[i]);
 	}
-	return (*i);
+	return (NULL);
 }
 
-Channel	& Server::getChannelByName(std::string name)
+Channel	* Server::getChannelByName(std::string name)
 {
-	std::vector<Channel>::iterator i;
+	int channels_size = _channels.size();
 
-	for (i = channels.begin(); i != channels.end(); i++)
+	for(int i = 0; i < channels_size; i++)
 	{
-		if (i->getChannelName() == name)
-			return (*i);
+		if (_channels[i].getName() == name)
+			return (&_channels[i]);
 	}
-	return (*i);
+	return (NULL);
+}
+
+Channel *Server::getChannelByClientSocket(int socket)
+{
+	int channels_size = _channels.size();
+	for (int i = 0; i < channels_size; i++)
+	{
+		int clients_size = _channels[i].getClients().size();
+
+		for (int j = 0; j < clients_size; j++)
+		{
+			if (_channels[i].getClients()[j].getPollfd().fd == socket)
+				return (&_channels[i]);
+		}		
+	}
+	return (NULL);
 }
 
 void Server::acceptNewClient()
 {
-    client_socket = accept(server_fd, NULL, NULL);
+    _client_socket = accept(_server_fd, NULL, NULL);
 
-    if (client_socket == -1)
+    if (_client_socket == -1)
 	{
         perror("accept");
         return;
     }
 
-    fcntl(client_socket, F_SETFL, O_NONBLOCK);
+    fcntl(_client_socket, F_SETFL, O_NONBLOCK);
 
     pollfd client_pollfd;
-    client_pollfd.fd = client_socket;
+    client_pollfd.fd = _client_socket;
     client_pollfd.events = POLLIN;
-    poll_fds.push_back(client_pollfd);
+    _poll_fds.push_back(client_pollfd);
 
     Client new_client = Client(client_pollfd);
-    clientes.push_back(new_client);
+    _clients.push_back(new_client);
 
-    std::cout << "New client connected: " << client_socket << std::endl;
-	send(client_socket, "Insert Password\n", 16, 0);
+    std::cout << "New client connected: " << _client_socket << std::endl;
+	send(_client_socket, "Insert Password\n", 16, 0);
 }
 
 void Server::removeClient()
@@ -65,25 +81,25 @@ void Server::removeClient()
 	std::vector<pollfd>::iterator it;
 	std::vector<Client>::iterator aux;
 
-	for (it = poll_fds.begin(); it != poll_fds.end(); it++)
+	for (it = _poll_fds.begin(); it != _poll_fds.end(); it++)
 	{
-		if (it->fd == client_socket)
+		if (it->fd == _client_socket)
 			break ;
 	}
-	for (aux = clientes.begin(); aux != clientes.end(); aux++)
+	for (aux = _clients.begin(); aux != _clients.end(); aux++)
 	{
-		if (aux->getPollfd().fd == client_socket)
+		if (aux->getPollfd().fd == _client_socket)
 			break ;
 	}
-	if (it != poll_fds.end())
-		poll_fds.erase(it);
-	if (aux != clientes.end())
-		clientes.erase(aux);
+	if (it != _poll_fds.end())
+		_poll_fds.erase(it);
+	if (aux != _clients.end())
+		_clients.erase(aux);
 }
 
 void	Server::addChannel(std::string channelName)
 {
 	Channel newChannel(channelName);
 
-	channels.push_back(newChannel);
+	_channels.push_back(newChannel);
 }

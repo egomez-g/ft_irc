@@ -27,20 +27,21 @@ class Server
 	private:
 
 		/* Server conf */
-		int			port;		/* Port of the server */
-		int			server_fd;	/* Server comunication */
-		std::string	password;	/* Server password */
+		int			_port;		/* Port of the server */
+		int			_server_fd;	/* Server comunication */
+		std::string	_password;	/* Server password */
 
-		std::vector<pollfd> poll_fds;
+		std::vector<pollfd> _poll_fds;
 
-		sockaddr_in	adress;		/* Server socket */
-		int			addrlen;	
-		int			new_socket;
+		sockaddr_in	_adress;		/* Server socket */
+		int			_addrlen;	
+		int			_new_socket;
 
-		std::vector<Channel>	channels;
-		std::vector<Client> 	clientes;
+		std::vector<Channel>	_channels;
+		std::vector<Client> 	_clients;
 
-		int			client_socket;
+		int			_client_socket;
+
 	public:
 		int		initServer(char **argv);
 		int		listenLoop();
@@ -50,10 +51,12 @@ class Server
 		void	closeServer();
 		
 		//utils
-		Client &getClientByFd(int fd);
-		Client &getClientByName(std::string name);
-		Channel &getChannelByName(std::string name);
+		Client	*getClientByFd(int fd);
+		Client	*getClientByName(std::string name);
+		Channel	*getChannelByName(std::string name);
+		Channel	*getChannelByClientSocket(int socket);
 		void	addChannel(std::string channelName);
+		
 		//parse
 		int		parseCmd(char *cmd);
 
@@ -64,5 +67,5 @@ class Server
 		void	Topic(std::string topicName);
 		void	Mode(std::string flag);
 		void	Help();
-		void	Priv(std::string name, std::string msg);
+		void	Priv(std::string name, std::vector<std::string> msgs);
 };

@@ -2,7 +2,7 @@
 
 Channel::Channel(std::string ChannelName)
 {
-	_ChannelName = ChannelName;
+	_channel_name = ChannelName;
 	_topic = "";
 }
 
@@ -10,9 +10,9 @@ Channel::~Channel()
 {
 }
 
-void	Channel::setChannelName(std::string ChannelName)
+void	Channel::setName(std::string ChannelName)
 {
-	_ChannelName = ChannelName;
+	_channel_name = ChannelName;
 }
 
 void	Channel::setTopic(std::string topic)
@@ -44,9 +44,9 @@ std::string	Channel::getTopic()
 	return (_topic);
 }
 
-std::string	Channel::getChannelName()
+std::string	Channel::getName()
 {
-	return(_ChannelName);
+	return(_channel_name);
 }
 
 std::vector<Client>	Channel::getClients()
@@ -56,7 +56,7 @@ std::vector<Client>	Channel::getClients()
 
 bool	Channel::operator==(std::vector<Channel>::iterator other)
 {
-	if (this->getChannelName() == other->getChannelName())
+	if (this->getName() == other->getName())
 		return (true);
 	return(false);
 }

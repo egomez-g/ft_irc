@@ -1,25 +1,29 @@
 #include "../inc/Server.hpp"
 
-std::vector<std::string> split(std::string s, std::string delimiter)
+std::vector<std::string> split(std::string str, std::string delimiter)
 {
-	size_t pos_start = 0, pos_end, delim_len = delimiter.length();
-	std::string token;
-	std::vector<std::string> res;
+	size_t pos_start = 0;
+	size_t delim_len = delimiter.length();
+	size_t pos_end;
 
-	while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos)
+	std::string aux;
+	std::vector<std::string> splitted;
+
+	while ((pos_end = str.find(delimiter, pos_start)) != std::string::npos)
 	{
-		token = s.substr (pos_start, pos_end - pos_start);
+		aux = str.substr (pos_start, pos_end - pos_start);
 		pos_start = pos_end + delim_len;
-		res.push_back (token);
+		
+		splitted.push_back(aux);
 	}
-	res.push_back (s.substr (pos_start));
-	return (res);
+
+	splitted.push_back (str.substr (pos_start));
+	return (splitted);
 }
 
 int	Server::parseCmd(char * cmd)
 {
 	std::vector<std::string> aux = split(cmd, " ");
-
 	std::string	msg;
 
 	if (aux[0] == "KICK")
@@ -27,20 +31,22 @@ int	Server::parseCmd(char * cmd)
 		if (aux[1].empty() || aux[2].empty())
 		{
 			msg = "kick client failed, type HELP for help\n";
-			send(client_socket, msg.c_str(), msg.length(), 0);
+			send(_client_socket, msg.c_str(), msg.length(), 0);
 		}
 		else
 			Kick(aux[1], aux[2]);
+		return (1);
 	}
 	else if (aux[0] == "INV")
 	{
 		if (aux[1].empty() || aux[2].empty())
 		{
 			msg = "invite client failed, type HELP for help\n";
-			send(client_socket, msg.c_str(), msg.length(), 0);
+			send(_client_socket, msg.c_str(), msg.length(), 0);
 		}
 		else
-			Invite(aux[1], aux[2]);		
+			Invite(aux[1], aux[2]);
+		return (1);
 	}
 	else if (aux[0] == "TOPIC")
 	{
@@ -48,24 +54,34 @@ int	Server::parseCmd(char * cmd)
 			Topic();
 		else
 			Topic(aux[1]);
+		return (1);
 	}
 	else if (aux[0] == "MODE")
 	{
 		if (aux[1].empty())
+		{
+			msg = "wrong use of [MODE], type HELP for help\n";
+			send(_client_socket, msg.c_str(), msg.length(), 0);
+		}
+		else
 			Mode(aux[1]);
+		return (1);
 	}
-	// else if (aux[0] == "PRIV")
-	// {
-	// 	if (aux[1].empty() || aux[2].empty())
-	// 		Priv(aux[1], aux[2]);
-	// }
+	else if (aux[0] == "PRIV")
+	{
+		if (aux[1].empty() || aux[2].empty())
+		{
+			msg = "wrong use of [MODE], type HELP for help\n";
+			send(_client_socket, msg.c_str(), msg.length(), 0);
+		}
+		else
+			Priv(aux[1], aux);
+		return (1);
+	}
 	else if (aux[0] == "HELP")
 	{
 		Help();
+		return (1);
 	}
-	else
-		std::cout << "Type HELP for help" << std::endl;
-
-
 	return (0);
 }

@@ -6,7 +6,8 @@ class Client
 	private:
 		std::string _username;
 		std::string _password;
-		pollfd _pollfd;
+		std::string	_loc;
+		pollfd _poll_fd;
 		Client();
 
 	public:
@@ -14,11 +15,12 @@ class Client
 		~Client();
 
 		void 		setUsername(std::string username);
-		std::string	getUsername();
 		void 		setPassword(std::string password);
+		void 		setLoc(std::string loc);
+		std::string	getUsername();
 		std::string	getPassword();
+		std::string getLoc();
 		pollfd 		getPollfd();
 
 		bool	operator==(std::vector<Client>::iterator other);
-
 };
