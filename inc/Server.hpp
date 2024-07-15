@@ -64,8 +64,10 @@ class Server
 		void	Kick(std::string clientName, std::string channelName);
 		void	Invite(std::string clientName, std::string channelName);
 		void	Topic();
-		void	Topic(std::string topicName);
-		void	Mode(std::string flag);
+		void	Topic(std::vector<std::string> msgs);
+		void	Mode(std::string flag, std::vector<std::string> msgs);
 		void	Help();
 		void	Priv(std::string name, std::vector<std::string> msgs);
+		void	move(std::string name);
+		void	sendToAll(std::vector<std::string> msgs);
 };

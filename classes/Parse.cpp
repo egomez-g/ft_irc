@@ -28,7 +28,7 @@ int	Server::parseCmd(char * cmd)
 
 	if (aux[0] == "KICK")
 	{
-		if (aux[1].empty() || aux[2].empty())
+		if (aux.size() < 3 || aux[1].empty() || aux[2].empty())
 		{
 			msg = "kick client failed, type HELP for help\n";
 			send(_client_socket, msg.c_str(), msg.length(), 0);
@@ -39,7 +39,7 @@ int	Server::parseCmd(char * cmd)
 	}
 	else if (aux[0] == "INV")
 	{
-		if (aux[1].empty() || aux[2].empty())
+		if (aux.size() < 3 || aux[1].empty() || aux[2].empty())
 		{
 			msg = "invite client failed, type HELP for help\n";
 			send(_client_socket, msg.c_str(), msg.length(), 0);
@@ -50,26 +50,26 @@ int	Server::parseCmd(char * cmd)
 	}
 	else if (aux[0] == "TOPIC")
 	{
-		if (aux[1].empty())
+		if (aux.size() < 2 || aux[1].empty())
 			Topic();
 		else
-			Topic(aux[1]);
+			Topic(aux);
 		return (1);
 	}
 	else if (aux[0] == "MODE")
 	{
-		if (aux[1].empty())
+		if (aux.size() < 2 || aux[1].empty())
 		{
 			msg = "wrong use of [MODE], type HELP for help\n";
 			send(_client_socket, msg.c_str(), msg.length(), 0);
 		}
 		else
-			Mode(aux[1]);
+			Mode(aux[1], aux);
 		return (1);
 	}
 	else if (aux[0] == "PRIV")
 	{
-		if (aux[1].empty() || aux[2].empty())
+		if (aux.size() < 3 || aux[1].empty() || aux[2].empty())
 		{
 			msg = "wrong use of [MODE], type HELP for help\n";
 			send(_client_socket, msg.c_str(), msg.length(), 0);
@@ -82,6 +82,24 @@ int	Server::parseCmd(char * cmd)
 	{
 		Help();
 		return (1);
+	}
+	else if (aux[0] == "MOVE")
+	{
+		if (aux.size() < 2 || aux[1].empty())
+		{
+			msg = "wrong use of [MOVE], type HELP for help\n";
+			send(_client_socket, msg.c_str(), msg.length(), 0);
+		}
+		else
+			move(aux[1]);
+		return (1);
+	}
+	else
+	{
+		if (getClientByFd(_client_socket)->getLoc().empty())
+			send(_client_socket, "JOIN a group or send a PRIV or type HELP for more info\n", 55, 0);
+		else
+		 	sendToAll(aux);
 	}
 	return (0);
 }

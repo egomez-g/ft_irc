@@ -59,7 +59,7 @@ void Server::acceptNewClient()
     if (_client_socket == -1)
 	{
         perror("accept");
-        return;
+        return ;
     }
 
     fcntl(_client_socket, F_SETFL, O_NONBLOCK);
@@ -101,5 +101,6 @@ void	Server::addChannel(std::string channelName)
 {
 	Channel newChannel(channelName);
 
+	newChannel.setClient(*getClientByFd(_client_socket));
 	_channels.push_back(newChannel);
 }

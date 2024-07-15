@@ -1,3 +1,4 @@
+
 #include "../inc/Server.hpp"
 
 int Server::initServer(char **argv)
@@ -94,9 +95,12 @@ void Server::handleClientMessage()
 	{
 		if (buffer != _password)
 		{
-			std::cout << _client_socket << " INCORRECT _password" << std::endl;
-			removeClient();
-			exit (1); /*TODO no se puede*/
+			std::string msg = buffer;
+
+			if (msg[0] == 'C' || msg[0] == 'J' || msg[0] == 'O')
+				return ; //TODO: raro
+			send(_client_socket, "Incorrect password try again\n", 29, 0);
+			return ;
 		}
 		else
 		{
@@ -107,13 +111,16 @@ void Server::handleClientMessage()
 	else if (getClientByFd(_client_socket)->getUsername() == "")
 	{
 		if(!getClientByName(buffer))
+		{
 			getClientByFd(_client_socket)->setUsername(buffer);
+			send(_client_socket, "RUBENN PUTERO PERUANO\n", 22, 0);
+		}
 		else
 			send(_client_socket, "Username already exists, try again\n", 35, 0);
 	}
 	else
 	{
-		//TODO: parsear los mensajes
+		//TODO: parsear los mensajes ifconfig docker run -it irssi
 		parseCmd(buffer);
 	}
 }
