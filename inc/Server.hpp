@@ -45,7 +45,7 @@ class Server
 	public:
 		int		initServer(char **argv);
 		int		listenLoop();
-		void	handleClientMessage();
+		int		handleClientMessage();
 		void 	acceptNewClient();
 		void	removeClient();
 		void	closeServer();
@@ -68,6 +68,7 @@ class Server
 		void	Mode(std::string flag, std::vector<std::string> msgs);
 		void	Help();
 		void	Priv(std::string name, std::vector<std::string> msgs);
-		void	move(std::string name);
+		void	Move(std::string name);
+		void	Join(std::string name);
 		void	sendToAll(std::vector<std::string> msgs);
 };

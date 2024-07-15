@@ -91,7 +91,18 @@ int	Server::parseCmd(char * cmd)
 			send(_client_socket, msg.c_str(), msg.length(), 0);
 		}
 		else
-			move(aux[1]);
+			Move(aux[1]);
+		return (1);
+	}
+	else if (aux[0] == "JOIN")
+	{
+		if (aux.size() < 2 || aux[1].empty())
+		{
+			msg = "wrong use of [JOIN], type HELP for help\n";
+			send(_client_socket, msg.c_str(), msg.length(), 0);
+		}
+		else
+			Join(aux[1]);
 		return (1);
 	}
 	else

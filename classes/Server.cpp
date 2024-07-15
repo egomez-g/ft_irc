@@ -31,6 +31,8 @@ int Server::initServer(char **argv)
 		throw std::runtime_error("Error while listening on socket.");
 
 	pollfd srv = {_server_fd, POLLIN, 0};
+	srv.revents = 0;
+	_poll_fds.clear();
 	_poll_fds.push_back(srv);
 	return (0);
 }
@@ -40,13 +42,12 @@ int Server::listenLoop()
 {
 	while (1)
 	{
-		int poll_count = poll(_poll_fds.data(), _poll_fds.size(), 500000);
+		int poll_count = poll(_poll_fds.data(), _poll_fds.size(), 100);
 		if (poll_count == -1)
 		{
 			perror("poll");
-			exit(1);
+			return (1);
 		}
-
 		for (size_t i = 0; i < _poll_fds.size(); ++i)
 		{
 			if (_poll_fds[i].revents & POLLIN)
@@ -56,7 +57,8 @@ int Server::listenLoop()
 				else
 				{
 					_client_socket = _poll_fds[i].fd;
-					handleClientMessage();
+					if (handleClientMessage())
+						return (1);
 				}
 		    }
 		}
@@ -64,11 +66,12 @@ int Server::listenLoop()
     return (0);
 }
 
-void Server::handleClientMessage()
+int Server::handleClientMessage()
 {
 	if (!getClientByFd(_client_socket))
-		return ;
+		return (0);
 
+	std::string msg;
     char buffer[512] = {0};
     int bytes_received = recv(_client_socket, buffer, sizeof(buffer), 0);
 
@@ -79,28 +82,30 @@ void Server::handleClientMessage()
         else
             perror("recv");
         removeClient();
-        return;
+        return (0);
     }
 	if (buffer[bytes_received - 1] == '\n')
 		buffer[bytes_received - 1] = '\0';
 	else
 		buffer[bytes_received] = '\0';
-	//check input spaces tal noseque
 	int i = 0;
 	while (buffer[i] == ' ')
 		++i;
 	if (buffer[i] == '\n')
-		return;
+		return (0);
+	msg = buffer;
+	if (msg == "EXIT")
+		return (1);
 	if (getClientByFd(_client_socket)->getPassword() == "")
 	{
 		if (buffer != _password)
 		{
-			std::string msg = buffer;
+			msg = buffer;
 
 			if (msg[0] == 'C' || msg[0] == 'J' || msg[0] == 'O')
-				return ; //TODO: raro
+				return (0); //TODO: raro
 			send(_client_socket, "Incorrect password try again\n", 29, 0);
-			return ;
+			return (0);
 		}
 		else
 		{
@@ -120,9 +125,9 @@ void Server::handleClientMessage()
 	}
 	else
 	{
-		//TODO: parsear los mensajes ifconfig docker run -it irssi
 		parseCmd(buffer);
 	}
+	return (0);
 }
 
 

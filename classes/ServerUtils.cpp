@@ -102,5 +102,6 @@ void	Server::addChannel(std::string channelName)
 	Channel newChannel(channelName);
 
 	newChannel.setClient(*getClientByFd(_client_socket));
+	newChannel.addAdmin(*getClientByFd(_client_socket));
 	_channels.push_back(newChannel);
 }

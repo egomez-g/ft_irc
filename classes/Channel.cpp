@@ -43,6 +43,25 @@ void	Channel::setClearanceTopic(bool clearanceTopic)
 	_clearanceTopic = clearanceTopic;
 }
 
+void	Channel::addAdmin(Client klaient)
+{
+	_admins.push_back(klaient);
+}
+
+void	Channel::rmAdmin(Client klaient)
+{
+	std::vector<Client>::iterator i;
+
+	for (i = _admins.begin(); i != _admins.end(); i++)
+	{
+		if (klaient == i)
+		{
+			_admins.erase(i);
+			return ;
+		}
+	}
+}
+
 void	Channel::eraseClient(Client klaient)
 {
 	std::vector<Client>::iterator i;
@@ -85,6 +104,36 @@ bool	Channel::getInvite()
 bool	Channel::getClearanceTopic()
 {
 	return (_clearanceTopic);
+}
+
+std::vector<Client>	Channel::getAdmins()
+{
+	return (_admins);
+}
+
+
+bool	Channel::isAdmin(std::string klaient)
+{
+	std::vector<Client>::iterator i;
+
+	for (i = _admins.begin(); i != _admins.end(); i++)
+	{
+		if (i->getUsername() == klaient)
+			return (true);
+	}
+	return (false);
+}
+
+Client	* Channel::getChannelClientByName(std::string name)
+{
+	int clients_size = _clients.size();
+
+	for(int i = 0; i < clients_size; i++)
+	{
+		if (_clients[i].getUsername() == name)
+			return (&_clients[i]);
+	}
+	return (NULL);
 }
 
 bool	Channel::operator==(std::vector<Channel>::iterator other)
