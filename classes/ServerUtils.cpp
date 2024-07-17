@@ -115,6 +115,7 @@ void Server::removeClient()
 		_poll_fds.erase(it);
 	if (aux != _clients.end())
 		_clients.erase(aux);
+	close(_client_socket);
 }
 
 void	Server::addChannel(std::string channelName)

@@ -28,9 +28,9 @@ int main(int argc, char **argv)
 }
 
 /*
-todo: 
-Communication between client and server has to be done via TCP/IP (v4 or v6),
+todo:
+Hay que gestionar el ctrl c para que cuando lo hagamos salga como queramos.
 
-probar a meter ctl z datos a la mitad
+
 -> Ctrl+D buguea todo. ¿Se puede gestionar? (nope)
 */

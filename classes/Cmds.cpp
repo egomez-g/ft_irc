@@ -77,6 +77,13 @@ void Server::Topic(std::vector<std::string> msgs)
 {
 	std::string	msg;
 	Channel *channel =  getChannelByName(getClientByFd(_client_socket)->getLoc());
+	
+	if (!channel)
+	{
+		msg = "[" + msgs[1] + "]: Channel doesn't exist\n";
+		send(_client_socket, msg.c_str(), msg.length(), 0);
+		return;
+	}
 	if (!channel->isAdmin(getClientByFd(_client_socket)->getUsername()))
 	{
 		msg = "[" + channel->getName() + "]: You have no permission\n";

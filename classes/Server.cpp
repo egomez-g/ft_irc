@@ -35,6 +35,7 @@ int Server::initServer(char **argv)
 	srv.revents = 0;
 	_poll_fds.clear();
 	_poll_fds.push_back(srv);
+	_sizeOfClients = _poll_fds.size();
 	return (0);
 }
 
@@ -43,8 +44,7 @@ int Server::listenLoop()
 {
 	while (1)
 	{
-		int poll_count = poll(_poll_fds.data(), _poll_fds.size(), 100);
-		std::cout << poll_count << std::endl;
+		int poll_count = poll(&(_poll_fds[0]), _poll_fds.size(), 100);
 		if (poll_count == -1)
 		{
 			perror("poll");
@@ -54,7 +54,6 @@ int Server::listenLoop()
 		{
 			if (_poll_fds[i].revents & POLLIN)
 			{
-				std::cout << "Here" << std::endl;
 				if (_poll_fds[i].fd == _server_fd)
 					acceptNewClient();
 				else
@@ -78,9 +77,6 @@ int Server::handleClientMessage()
 
     char buffer[513] = {0};
     int bytes_received = recv(_client_socket, buffer, sizeof(buffer), 0);
-	std::cout << "==> " << bytes_received << std::endl;
-	// if (std::cin.eof())
-	// 		return (1);
 
 	if (bytes_received <= 0)
 	{
@@ -117,8 +113,11 @@ int Server::handleClientMessage()
 	}
 	msg = buffer;
 	if (msg == "EXIT")
-		return (1);
-
+	{
+		removeClient();
+		std::cout << "Client disconnected: " << _client_socket << std::endl;
+		return (0);
+	}
 	if (getClientByFd(_client_socket)->getPassword() == "")
 	{
 		if (msg != _password)

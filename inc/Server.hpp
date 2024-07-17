@@ -31,6 +31,7 @@ class Server
 		int			_server_fd;	/* Server comunication */
 		std::string	_password;	/* Server password */
 		bool		_validmsgflag;
+		size_t		_sizeOfClients;
 
 		std::vector<pollfd> _poll_fds;
 
