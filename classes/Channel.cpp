@@ -23,9 +23,9 @@ void	Channel::setTopic(std::string topic)
 	_topic = topic;
 }
 
-void	Channel::setClient(Client klaient)
+void	Channel::setClient(Client client)
 {
-	_clients.push_back(klaient);
+	_clients.push_back(client);
 }
 
 void	Channel::setPassword(std::string password)
@@ -43,18 +43,18 @@ void	Channel::setClearanceTopic(bool clearanceTopic)
 	_clearanceTopic = clearanceTopic;
 }
 
-void	Channel::addAdmin(Client klaient)
+void	Channel::addAdmin(Client client)
 {
-	_admins.push_back(klaient);
+	_admins.push_back(client);
 }
 
-void	Channel::rmAdmin(Client klaient)
+void	Channel::rmAdmin(Client client)
 {
 	std::vector<Client>::iterator i;
 
 	for (i = _admins.begin(); i != _admins.end(); i++)
 	{
-		if (klaient == i)
+		if (client == i)
 		{
 			_admins.erase(i);
 			return ;
@@ -62,13 +62,13 @@ void	Channel::rmAdmin(Client klaient)
 	}
 }
 
-void	Channel::eraseClient(Client klaient)
+void	Channel::eraseClient(Client client)
 {
 	std::vector<Client>::iterator i;
 
 	for (i = _clients.begin(); i != _clients.end(); i++)
 	{
-		if (klaient == i)
+		if (client == i)
 		{
 			_clients.erase(i);
 			return ;
@@ -112,13 +112,13 @@ std::vector<Client>	Channel::getAdmins()
 }
 
 
-bool	Channel::isAdmin(std::string klaient)
+bool	Channel::isAdmin(std::string client)
 {
 	std::vector<Client>::iterator i;
 
 	for (i = _admins.begin(); i != _admins.end(); i++)
 	{
-		if (i->getUsername() == klaient)
+		if (i->getUsername() == client)
 			return (true);
 	}
 	return (false);
@@ -136,7 +136,7 @@ Client	* Channel::getChannelClientByName(std::string name)
 	return (NULL);
 }
 
-bool	Channel::operator==(std::vector<Channel>::iterator other)
+bool	Channel::operator == (std::vector<Channel>::iterator other)
 {
 	if (this->getName() == other->getName())
 		return (true);

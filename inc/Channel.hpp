@@ -21,14 +21,14 @@ class Channel
 		~Channel();
 		void				setName(std::string ChannelName);
 		void				setTopic(std::string topic);
-		void				setClient(Client klaient);
+		void				setClient(Client client);
 		void				setPassword(std::string password);
 		void				setInvite(bool invite);
 		void				setClearanceTopic(bool clearanceTopic);
-		void				addAdmin(Client klaient);
-		void				rmAdmin(Client klaient);
+		void				addAdmin(Client client);
+		void				rmAdmin(Client client);
 
-		void				eraseClient(Client klaient);
+		void				eraseClient(Client client);
 		std::string			getTopic();
 		std::string			getName();
 		std::vector<Client>	getClients();
@@ -37,7 +37,7 @@ class Channel
 
 		bool				getInvite();
 		bool				getClearanceTopic();
-		bool				isAdmin(std::string klaient);
+		bool				isAdmin(std::string client);
 		Client				*getChannelClientByName(std::string name);
 
 		bool	operator==(std::vector<Channel>::iterator other);

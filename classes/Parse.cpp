@@ -102,7 +102,28 @@ int	Server::parseCmd(char * cmd)
 			send(_client_socket, msg.c_str(), msg.length(), 0);
 		}
 		else
-			Join(aux[1]);
+		{
+			if (getChannelByName(aux[1]))
+			{
+				if(getChannelByName(aux[1])->getPassword() != "")
+				{
+					if((aux.size() > 2))
+						Join(aux[1], aux[2]);
+					else
+					{
+						msg = "Channel [" + aux[1] + "] needs a password\n";
+						send(_client_socket, msg.c_str(), msg.length(), 0);
+					}
+				}
+				else
+					Join(aux[1]);
+			}
+			else
+			{
+				send(_client_socket, "Channel doesn't exist\n", 22, 0);
+				return (1);
+			}
+		}
 		return (1);
 	}
 	else

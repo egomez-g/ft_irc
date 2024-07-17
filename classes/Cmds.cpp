@@ -25,6 +25,7 @@ void Server::Invite(std::string clientName, std::string channelName)
 {
 	std::string	msg;
 
+
 	if (!getClientByName(clientName))
 	{
 		msg = "error: wrong client name: " + clientName + "\n";
@@ -32,7 +33,11 @@ void Server::Invite(std::string clientName, std::string channelName)
 		return ;
 	}
 	if (!getChannelByName(channelName))
+	{
 		addChannel(channelName);
+		getChannelByName(channelName)->addAdmin(*getClientByFd(_client_socket));
+		getClientByFd(_client_socket)->setLoc(channelName);
+	}
 	getChannelByName(channelName)->setClient(*getClientByName(clientName));
 	msg = clientName + " added to: " + channelName + "\n";
 	send(_client_socket, msg.c_str(), msg.length(), 0);
@@ -56,7 +61,13 @@ void Server::Topic(std::vector<std::string> msgs)
 {
 	std::string	msg;
 	Channel *channel =  getChannelByName(getClientByFd(_client_socket)->getLoc());
-
+	if (!channel->isAdmin(getClientByFd(_client_socket)->getUsername()))
+	{
+		msg = "[" + channel->getName() + "]: You have no permission\n";
+		send(_client_socket, msg.c_str(), msg.length(), 0);
+		return;
+	}
+	
 	if (getClientByFd(_client_socket)->getLoc().empty())
 	{
 		msg = "Error: user isn't in any channel\n";
@@ -111,13 +122,13 @@ void Server::Mode(std::string flag, std::vector<std::string> msgs)
 	}
 	else if (flag == "k") //Set/remove the channel key (password)
 	{
-		if (msgs.size() < 3 || msgs[2].empty())
+		if (!channel->isAdmin(getClientByFd(_client_socket)->getUsername()))
+			msg = "[" + channel->getName() + "]: You have no permission\n";
+		else if (msgs.size() < 3 || msgs[2].empty())
 		{
 			channel->setPassword("");
 			msg = "Password unseted\n";
 		}
-		else if (!channel->isAdmin(getClientByFd(_client_socket)->getUsername()))
-			msg = "[" + channel->getName() + "]: You have no permission\n";
 		else
 		{
 			channel->setPassword(msgs[2]);
@@ -125,6 +136,26 @@ void Server::Mode(std::string flag, std::vector<std::string> msgs)
 		}
 	}
 	else if (flag == "o") //Give/take channel operator privilege
+	{
+		if (!channel->getChannelClientByName(msgs[2]))
+			msg = "Client doesn't belong to [" + channel->getName() + "]\n";
+		else if (!channel->isAdmin(getClientByFd(_client_socket)->getUsername()))
+			msg = "[" + channel->getName() + "]: You have no permission\n";
+		else
+		{
+			if (channel->isAdmin(msgs[2]))
+			{
+				channel->addAdmin(*getClientByName(msgs[2]));
+				msg = "[" + channel->getName() + "]: Deleted admin <" + msgs[2] + ">\n";
+			}
+			else
+			{
+				channel->rmAdmin(*getClientByName(msgs[2]));
+				msg = "[" + channel->getName() + "]: New admin <" + msgs[2] + ">\n";
+			}
+		}
+	}
+	else if (flag == "l") //Set/Remove channel password
 	{
 		if (!channel->getChannelClientByName(msgs[2]))
 			msg = "Client doesn't belong to [" + channel->getName() + "]\n";
@@ -221,6 +252,33 @@ void	Server::Join(std::string name)
 	else
 	{
 		std::string msg;
+
+		getClientByFd(_client_socket)->setLoc(name);
+		msg = "Succesfully joined to: [" + name + "]\n";
+		send(_client_socket, msg.c_str(), msg.length(), 0);
+	}
+}
+
+void	Server::Join(std::string name, std::string password)
+{
+	Channel *channel= getChannelByName(name);
+	if (!channel)
+	{
+		send(_client_socket, "Channel doesn't exist\n", 22, 0);
+		return ;
+	}
+	if (channel->getInvite())
+		send(_client_socket, "Channel on invite only\n", 23, 0);
+	else
+	{
+		std::string msg;
+
+		if (password != channel->getPassword())
+		{
+			msg = "Wrong password, try again\n";
+			send(_client_socket, msg.c_str(), msg.length(), 0);
+			return ;
+		}
 
 		getClientByFd(_client_socket)->setLoc(name);
 		msg = "Succesfully joined to: [" + name + "]\n";

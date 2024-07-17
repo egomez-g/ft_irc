@@ -22,6 +22,11 @@ void Client::setUsername(std::string username)
 	_username = username;
 }
 
+void Client::setNickname(std::string nickname)
+{
+	_nickname = nickname;
+}
+
 void Client::setLoc(std::string loc)
 {
 	_loc = loc;

@@ -74,7 +74,7 @@ int Server::handleClientMessage()
 	std::string msg;
     char buffer[512] = {0};
     int bytes_received = recv(_client_socket, buffer, sizeof(buffer), 0);
-
+	buffer[511] = '\0';
 	if (bytes_received <= 0) 
 	{
         if (bytes_received == 0)
@@ -102,8 +102,8 @@ int Server::handleClientMessage()
 		{
 			msg = buffer;
 
-			if (msg[0] == 'C' || msg[0] == 'J' || msg[0] == 'O')
-				return (0); //TODO: raro
+			if (std::strchr(msg.c_str(), ' '))
+				return (0);
 			send(_client_socket, "Incorrect password try again\n", 29, 0);
 			return (0);
 		}
@@ -115,10 +115,13 @@ int Server::handleClientMessage()
 	}
 	else if (getClientByFd(_client_socket)->getUsername() == "")
 	{
+		if (!(*buffer))
+			return (0);
 		if(!getClientByName(buffer))
 		{
 			getClientByFd(_client_socket)->setUsername(buffer);
-			send(_client_socket, "RUBENN PUTERO PERUANO\n", 22, 0);
+			msg =  "Welcome to our server, " + getClientByFd(_client_socket)->getUsername() + "\n";
+			send(_client_socket, msg.c_str(), msg.length(), 0);
 		}
 		else
 			send(_client_socket, "Username already exists, try again\n", 35, 0);

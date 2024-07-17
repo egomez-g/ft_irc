@@ -70,5 +70,6 @@ class Server
 		void	Priv(std::string name, std::vector<std::string> msgs);
 		void	Move(std::string name);
 		void	Join(std::string name);
+		void	Join(std::string name, std::string password);
 		void	sendToAll(std::vector<std::string> msgs);
 };
