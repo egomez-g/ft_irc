@@ -21,7 +21,7 @@ std::vector<std::string> split(std::string str, std::string delimiter)
 	return (splitted);
 }
 
-int	Server::parseCmd(char * cmd)
+void	Server::parseCmd(char *cmd)
 {
 	std::vector<std::string> aux = split(cmd, " ");
 	std::string	msg;
@@ -35,7 +35,6 @@ int	Server::parseCmd(char * cmd)
 		}
 		else
 			Kick(aux[1], aux[2]);
-		return (1);
 	}
 	else if (aux[0] == "INV")
 	{
@@ -46,7 +45,6 @@ int	Server::parseCmd(char * cmd)
 		}
 		else
 			Invite(aux[1], aux[2]);
-		return (1);
 	}
 	else if (aux[0] == "TOPIC")
 	{
@@ -54,7 +52,6 @@ int	Server::parseCmd(char * cmd)
 			Topic();
 		else
 			Topic(aux);
-		return (1);
 	}
 	else if (aux[0] == "MODE")
 	{
@@ -65,7 +62,6 @@ int	Server::parseCmd(char * cmd)
 		}
 		else
 			Mode(aux[1], aux);
-		return (1);
 	}
 	else if (aux[0] == "PRIV")
 	{
@@ -76,12 +72,10 @@ int	Server::parseCmd(char * cmd)
 		}
 		else
 			Priv(aux[1], aux);
-		return (1);
 	}
 	else if (aux[0] == "HELP")
 	{
 		Help();
-		return (1);
 	}
 	else if (aux[0] == "MOVE")
 	{
@@ -92,7 +86,6 @@ int	Server::parseCmd(char * cmd)
 		}
 		else
 			Move(aux[1]);
-		return (1);
 	}
 	else if (aux[0] == "JOIN")
 	{
@@ -121,10 +114,18 @@ int	Server::parseCmd(char * cmd)
 			else
 			{
 				send(_client_socket, "Channel doesn't exist\n", 22, 0);
-				return (1);
 			}
 		}
-		return (1);
+	}
+	else if (aux[0] == "NICK")
+	{
+		if (aux.size() < 2 || aux[1].empty())
+		{
+			msg = "wrong use of [NICK], type HELP for help\n";
+			send(_client_socket, msg.c_str(), msg.length(), 0);
+		}
+		else
+			Nick(aux[1]);
 	}
 	else
 	{
@@ -133,5 +134,4 @@ int	Server::parseCmd(char * cmd)
 		else
 		 	sendToAll(aux);
 	}
-	return (0);
 }

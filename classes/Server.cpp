@@ -5,6 +5,7 @@ int Server::initServer(char **argv)
 {
 	_port = std::atoi(argv[1]);
 	_password = argv[2];
+	_validmsgflag = false;
 	if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 		return (std::cout << "socket failed" << std::endl, 1);
 	int opt = 1;
@@ -43,6 +44,7 @@ int Server::listenLoop()
 	while (1)
 	{
 		int poll_count = poll(_poll_fds.data(), _poll_fds.size(), 100);
+		std::cout << poll_count << std::endl;
 		if (poll_count == -1)
 		{
 			perror("poll");
@@ -52,6 +54,7 @@ int Server::listenLoop()
 		{
 			if (_poll_fds[i].revents & POLLIN)
 			{
+				std::cout << "Here" << std::endl;
 				if (_poll_fds[i].fd == _server_fd)
 					acceptNewClient();
 				else
@@ -72,10 +75,14 @@ int Server::handleClientMessage()
 		return (0);
 
 	std::string msg;
-    char buffer[512] = {0};
+
+    char buffer[513] = {0};
     int bytes_received = recv(_client_socket, buffer, sizeof(buffer), 0);
-	buffer[511] = '\0';
-	if (bytes_received <= 0) 
+	std::cout << "==> " << bytes_received << std::endl;
+	// if (std::cin.eof())
+	// 		return (1);
+
+	if (bytes_received <= 0)
 	{
         if (bytes_received == 0)
             std::cout << "Client disconnected: " << _client_socket << std::endl;
@@ -84,24 +91,38 @@ int Server::handleClientMessage()
         removeClient();
         return (0);
     }
-	if (buffer[bytes_received - 1] == '\n')
-		buffer[bytes_received - 1] = '\0';
+
+	if (buffer[bytes_received - 2] == '\n')
+		buffer[bytes_received - 2] = '\0';
 	else
-		buffer[bytes_received] = '\0';
+		buffer[bytes_received - 1] = '\0';
+
 	int i = 0;
-	while (buffer[i] == ' ')
+	while (buffer[i] == ' '  || buffer[i] == '\0')
 		++i;
-	if (buffer[i] == '\n')
+	if (buffer[i] == '\n' || buffer[i] == '\0')
 		return (0);
+
+	if (bytes_received == 513)
+	{
+		if (!_validmsgflag)
+			send(_client_socket, "Error: message too long\n", 24, 0);
+		_validmsgflag = true;
+		return (0);
+	}
+	if (_validmsgflag)
+	{
+		_validmsgflag = false;
+		return(0);
+	}
 	msg = buffer;
 	if (msg == "EXIT")
 		return (1);
+
 	if (getClientByFd(_client_socket)->getPassword() == "")
 	{
-		if (buffer != _password)
+		if (msg != _password)
 		{
-			msg = buffer;
-
 			if (std::strchr(msg.c_str(), ' '))
 				return (0);
 			send(_client_socket, "Incorrect password try again\n", 29, 0);
@@ -117,9 +138,10 @@ int Server::handleClientMessage()
 	{
 		if (!(*buffer))
 			return (0);
-		if(!getClientByName(buffer))
+		if(!getClientByUsername(buffer))
 		{
 			getClientByFd(_client_socket)->setUsername(buffer);
+			getClientByFd(_client_socket)->setNickname(buffer);
 			msg =  "Welcome to our server, " + getClientByFd(_client_socket)->getUsername() + "\n";
 			send(_client_socket, msg.c_str(), msg.length(), 0);
 		}

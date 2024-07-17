@@ -20,6 +20,7 @@ class Client
 		void 		setPassword(std::string password);
 		void 		setLoc(std::string loc);
 		std::string	getUsername();
+		std::string	getNickname();
 		std::string	getPassword();
 		std::string getLoc();
 		pollfd 		getPollfd();

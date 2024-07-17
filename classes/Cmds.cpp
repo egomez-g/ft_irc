@@ -9,16 +9,29 @@ void Server::Kick(std::string clientName, std::string channelName)
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 		return ;
 	}
-	if (!getClientByName(clientName))
+	if (!getClientByUsername(clientName))
 	{
 		msg = "error: wrong client name: " + clientName + "\n";
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 		return ;
 	}
 
-	getChannelByName(channelName)->eraseClient(*getClientByName(clientName));
-	msg = clientName + " erased from: " + channelName + "\n";
-	send(_client_socket, msg.c_str(), msg.length(), 0);
+	if (!getChannelByName(channelName)->isAdmin(clientName) ||
+		(getChannelByName(channelName)->isAdmin(clientName) &&
+		 getChannelByName(channelName)->getAdmins().size() > 1))
+	{
+		if (getClientByFd(_client_socket)->getLoc() == channelName)
+			getClientByUsername(clientName)->setLoc("");
+		getChannelByName(channelName)->eraseClient(*getClientByUsername(clientName));
+		msg = clientName + " erased from: " + channelName + "\n";
+		send(_client_socket, msg.c_str(), msg.length(), 0);
+	}
+	else
+	{
+		msg = "Can't KICK ["+ clientName +"], Channel " + channelName + " needs an Admin\n";
+		send(_client_socket, msg.c_str(), msg.length(), 0);
+	}
+
 }
 
 void Server::Invite(std::string clientName, std::string channelName)
@@ -26,7 +39,7 @@ void Server::Invite(std::string clientName, std::string channelName)
 	std::string	msg;
 
 
-	if (!getClientByName(clientName))
+	if (!getClientByUsername(clientName))
 	{
 		msg = "error: wrong client name: " + clientName + "\n";
 		send(_client_socket, msg.c_str(), msg.length(), 0);
@@ -35,10 +48,10 @@ void Server::Invite(std::string clientName, std::string channelName)
 	if (!getChannelByName(channelName))
 	{
 		addChannel(channelName);
-		getChannelByName(channelName)->addAdmin(*getClientByFd(_client_socket));
 		getClientByFd(_client_socket)->setLoc(channelName);
 	}
-	getChannelByName(channelName)->setClient(*getClientByName(clientName));
+	if (clientName == getClientByFd(_client_socket)->getUsername())
+		getChannelByName(channelName)->setClient(*getClientByUsername(clientName));
 	msg = clientName + " added to: " + channelName + "\n";
 	send(_client_socket, msg.c_str(), msg.length(), 0);
 }
@@ -53,7 +66,10 @@ void Server::Topic()
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 		return;
 	}
-	msg = getChannelByClientSocket(_client_socket)->getTopic() + "\n";
+	if (getChannelByClientSocket(_client_socket)->getTopic().empty())
+		msg = "[" + getChannelByClientSocket(_client_socket)->getName() + "]: No topic setted\n";
+	else
+		msg = getChannelByClientSocket(_client_socket)->getTopic() + "\n";
 	send(_client_socket, msg.c_str(), msg.length(), 0);
 }
 
@@ -145,12 +161,12 @@ void Server::Mode(std::string flag, std::vector<std::string> msgs)
 		{
 			if (channel->isAdmin(msgs[2]))
 			{
-				channel->addAdmin(*getClientByName(msgs[2]));
+				channel->addAdmin(*getClientByUsername(msgs[2]));
 				msg = "[" + channel->getName() + "]: Deleted admin <" + msgs[2] + ">\n";
 			}
 			else
 			{
-				channel->rmAdmin(*getClientByName(msgs[2]));
+				channel->rmAdmin(*getClientByUsername(msgs[2]));
 				msg = "[" + channel->getName() + "]: New admin <" + msgs[2] + ">\n";
 			}
 		}
@@ -165,12 +181,12 @@ void Server::Mode(std::string flag, std::vector<std::string> msgs)
 		{
 			if (channel->isAdmin(msgs[2]))
 			{
-				channel->addAdmin(*getClientByName(msgs[2]));
+				channel->addAdmin(*getClientByUsername(msgs[2]));
 				msg = "[" + channel->getName() + "]: Deleted admin <" + msgs[2] + ">\n";
 			}
 			else
 			{
-				channel->rmAdmin(*getClientByName(msgs[2]));
+				channel->rmAdmin(*getClientByUsername(msgs[2]));
 				msg = "[" + channel->getName() + "]: New admin <" + msgs[2] + ">\n";
 			}
 		}
@@ -184,24 +200,25 @@ void Server::Help()
 {
 	std::string	msg;
 	msg = "Available commands:\n";
-	msg += "\"[KICK] [username] [channel name]\" \n";
-	msg += "\"[INV] [username] [channel name]\" \n";
+	msg += "\"[KICK] [username] [channel_name]\" \n";
+	msg += "\"[INV] [username] [channel_name]\" \n";
 	msg += "\"[TOPIC]\" \n";
 	msg += "\"[TOPIC] [new topic]\" \n";
 	msg += "\"[MODE] [flag]\" \n";
-	msg += "\"[PRIV] [username msg]\" \n";
-	msg += "\"[MOVE] [channel name]\" \n";
-	msg += "\"[JOIN] [channel name]\" \n";
+	msg += "\"[PRIV] [username_msg]\" \n";
+	msg += "\"[MOVE] [channel_name]\" \n";
+	msg += "\"[JOIN] [channel_name]\" \n";
+	msg += "\"[NICK] [new nickname]\" \n";
 	msg += "\"[HELP]\" \n";
 	send(_client_socket, msg.c_str(), msg.length(), 0);
 }
 
 void	Server::Priv(std::string name, std::vector<std::string> msgs)
 {
-	std::string	msg = "<" + getClientByFd(_client_socket)->getUsername() + ">: ";
+	std::string	msg = "<" + getClientByFd(_client_socket)->getNickname() + ">: ";
 	int			socketSend;
 
-	if (getClientByName(name) == NULL)
+	if (getClientByUsername(name) == NULL)
 	{
 		msg = "error: Client not found\n";
 		send(_client_socket, msg.c_str(), msg.length(), 0);
@@ -210,7 +227,7 @@ void	Server::Priv(std::string name, std::vector<std::string> msgs)
 	for (unsigned long i = 2; i < msgs.size(); i++)
 		msg += msgs[i] + " ";
 	msg += "\n";
-	socketSend = getClientByName(name)->getPollfd().fd;
+	socketSend = getClientByUsername(name)->getPollfd().fd;
 	send(socketSend, msg.c_str(), msg.length(), 0);
 }
 
@@ -231,6 +248,9 @@ void	Server::Move(std::string name)
 			if (i->getUsername() == cliente->getUsername())
 			{
 				cliente->setLoc(name);
+
+				std::string	msg = "<" + cliente->getNickname() +"> moved to: [" + name + "]\n";
+				send(_client_socket, msg.c_str(), msg.length(), 0);
 				break ;
 			}
 		}
@@ -286,19 +306,32 @@ void	Server::Join(std::string name, std::string password)
 	}
 }
 
+void	Server::Nick(std::string nickname)
+{
+	std::string	msg;
+	if (!getClientByNickname(nickname))
+	{
+		getClientByFd(_client_socket)->setNickname(nickname);
+		msg = "Nickname changed to <" + nickname + ">\n";
+		send(_client_socket, msg.c_str(), msg.length(), 0);
+	}
+	else
+		send(_client_socket, "Nickname already in use, try again\n", 35, 0);
+}
+
 void	Server::sendToAll(std::vector<std::string> msgs)
 {
 	Channel *canal = getChannelByName(getClientByFd(_client_socket)->getLoc());
 	std::vector<Client>	clientes = canal->getClients();
 	if (!canal)
 		return ;
-	std::string msg = "[" + canal->getName() + "]" + "<" + getClientByFd(_client_socket)->getUsername() + ">: ";
+	std::string msg = "[" + canal->getName() + "]" + "<" + getClientByFd(_client_socket)->getNickname() + ">: ";
 	for (unsigned long j = 0; j < msgs.size(); j++)
 		msg += msgs[j] + " ";
 	msg += "\n";
 	for (std::vector<Client>::iterator i = clientes.begin(); i != clientes.end(); i++)
 	{
-		if (i->getPollfd().fd != _client_socket)
+		if (i->getPollfd().fd != _client_socket && getClientByFd(i->getPollfd().fd)->getLoc() == canal->getName())
 			send(i->getPollfd().fd, msg.c_str(), msg.length(), 0);
-	}
+	}	
 }

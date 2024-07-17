@@ -12,13 +12,25 @@ Client	* Server::getClientByFd(int fd)
 	return (NULL);
 }
 
-Client	* Server::getClientByName(std::string name)
+Client	* Server::getClientByUsername(std::string name)
 {
 	int clients_size = _clients.size();
 
 	for(int i = 0; i < clients_size; i++)
 	{
 		if (_clients[i].getUsername() == name)
+			return (&_clients[i]);
+	}
+	return (NULL);
+}
+
+Client	* Server::getClientByNickname(std::string name)
+{
+	int clients_size = _clients.size();
+
+	for(int i = 0; i < clients_size; i++)
+	{
+		if (_clients[i].getNickname() == name)
 			return (&_clients[i]);
 	}
 	return (NULL);
@@ -80,6 +92,14 @@ void Server::removeClient()
 {
 	std::vector<pollfd>::iterator it;
 	std::vector<Client>::iterator aux;
+
+	std::vector<Channel>::iterator pingo;
+	
+	for (pingo = _channels.begin(); pingo != _channels.end(); pingo++)
+	{
+		if (pingo->getChannelClientByName(getClientByFd(_client_socket)->getUsername()))
+			pingo->eraseClient(*getClientByFd(_client_socket));
+	}
 
 	for (it = _poll_fds.begin(); it != _poll_fds.end(); it++)
 	{

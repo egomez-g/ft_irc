@@ -3,6 +3,7 @@
 Client::Client(pollfd fd)
 {
 	_username = "";
+	_nickname = "";
 	_password = "";
 	_loc 	  = "";
 	_poll_fd  = fd;
@@ -35,6 +36,11 @@ void Client::setLoc(std::string loc)
 std::string Client::getUsername()
 {
 	return (_username);
+}
+
+std::string Client::getNickname()
+{
+	return (_nickname);
 }
 
 void Client::setPassword(std::string password)

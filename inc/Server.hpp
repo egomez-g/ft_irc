@@ -30,6 +30,7 @@ class Server
 		int			_port;		/* Port of the server */
 		int			_server_fd;	/* Server comunication */
 		std::string	_password;	/* Server password */
+		bool		_validmsgflag;
 
 		std::vector<pollfd> _poll_fds;
 
@@ -52,13 +53,14 @@ class Server
 		
 		//utils
 		Client	*getClientByFd(int fd);
-		Client	*getClientByName(std::string name);
+		Client	*getClientByUsername(std::string name);
+		Client	*getClientByNickname(std::string name);
 		Channel	*getChannelByName(std::string name);
 		Channel	*getChannelByClientSocket(int socket);
 		void	addChannel(std::string channelName);
 		
 		//parse
-		int		parseCmd(char *cmd);
+		void	parseCmd(char *cmd);
 
 		//cmds
 		void	Kick(std::string clientName, std::string channelName);
@@ -71,5 +73,6 @@ class Server
 		void	Move(std::string name);
 		void	Join(std::string name);
 		void	Join(std::string name, std::string password);
+		void	Nick(std::string nickname);
 		void	sendToAll(std::vector<std::string> msgs);
 };
