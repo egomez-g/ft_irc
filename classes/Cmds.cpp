@@ -50,9 +50,18 @@ void Server::Invite(std::string clientName, std::string channelName)
 		addChannel(channelName);
 		getClientByFd(_client_socket)->setLoc(channelName);
 	}
-	if (clientName == getClientByFd(_client_socket)->getUsername())
-		getChannelByName(channelName)->setClient(*getClientByUsername(clientName));
-	msg = clientName + " added to: " + channelName + "\n";
+	if (getChannelByName(channelName)->getClients().size() <getChannelByName(channelName)->getClientSize())
+	{
+		if (clientName != getClientByFd(_client_socket)->getUsername())
+		{
+			getChannelByName(channelName)->setClient(*getClientByUsername(clientName));
+			msg = clientName + " added to: " + channelName + "\n";
+		}
+		else
+			msg = clientName + " was already in [" + channelName + "]\n";
+	}
+	else
+		msg = "[" + channelName + "] is full\n";
 	send(_client_socket, msg.c_str(), msg.length(), 0);
 }
 
@@ -178,23 +187,19 @@ void Server::Mode(std::string flag, std::vector<std::string> msgs)
 			}
 		}
 	}
-	else if (flag == "l") //Set/Remove channel password
+	else if (flag == "l") //Set/Remove the user limit
 	{
-		if (!channel->getChannelClientByName(msgs[2]))
-			msg = "Client doesn't belong to [" + channel->getName() + "]\n";
-		else if (!channel->isAdmin(getClientByFd(_client_socket)->getUsername()))
+		if (!channel->isAdmin(getClientByFd(_client_socket)->getUsername()))
 			msg = "[" + channel->getName() + "]: You have no permission\n";
 		else
 		{
-			if (channel->isAdmin(msgs[2]))
-			{
-				channel->addAdmin(*getClientByUsername(msgs[2]));
-				msg = "[" + channel->getName() + "]: Deleted admin <" + msgs[2] + ">\n";
-			}
+			if (std::atoi(msgs[3].c_str()) < 1 ||
+				std::atoi(msgs[3].c_str()) > channel->getClients().size())
+				msg = "Not a valid size [MODE] [l] [size]\n";
 			else
 			{
-				channel->rmAdmin(*getClientByUsername(msgs[2]));
-				msg = "[" + channel->getName() + "]: New admin <" + msgs[2] + ">\n";
+				msg = "[" + channel->getName() + "] size setted to: " + msgs[3] + "\n";
+				channel->setClientSize(std::atoi(msgs[3].c_str()));
 			}
 		}
 	}
@@ -280,8 +285,14 @@ void	Server::Join(std::string name)
 	{
 		std::string msg;
 
-		getClientByFd(_client_socket)->setLoc(name);
-		msg = "Succesfully joined to: [" + name + "]\n";
+		if (channel->getClients().size() < channel->getClientSize())
+		{
+			getClientByFd(_client_socket)->setLoc(name);
+			channel->setClient(*getClientByFd(_client_socket));
+			msg = "Succesfully joined to: [" + name + "]\n";
+		}
+		else
+			msg = name + " was already in [" + channel->getName() + "]\n";
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 	}
 }

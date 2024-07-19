@@ -15,9 +15,11 @@
 # include <iomanip>
 # include <stdio.h>
 # include <stdlib.h>
+# include <signal.h>
 
 #include "Client.hpp"
 #include "Channel.hpp"
+
 
 class Client;
 class Channel;
@@ -32,6 +34,7 @@ class Server
 		std::string	_password;	/* Server password */
 		bool		_validmsgflag;
 		size_t		_sizeOfClients;
+		bool		_stop;
 
 		std::vector<pollfd> _poll_fds;
 
@@ -51,7 +54,8 @@ class Server
 		void 	acceptNewClient();
 		void	removeClient();
 		void	closeServer();
-		
+		void 	SetStop(bool state);
+
 		//utils
 		Client	*getClientByFd(int fd);
 		Client	*getClientByUsername(std::string name);

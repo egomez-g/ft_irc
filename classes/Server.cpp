@@ -42,14 +42,11 @@ int Server::initServer(char **argv)
 
 int Server::listenLoop()
 {
-	while (1)
+	while (!_stop)
 	{
 		int poll_count = poll(&(_poll_fds[0]), _poll_fds.size(), 100);
 		if (poll_count == -1)
-		{
-			perror("poll");
-			return (1);
-		}
+			return (0);
 		for (size_t i = 0; i < _poll_fds.size(); ++i)
 		{
 			if (_poll_fds[i].revents & POLLIN)
@@ -59,8 +56,7 @@ int Server::listenLoop()
 				else
 				{
 					_client_socket = _poll_fds[i].fd;
-					if (handleClientMessage())
-						return (1);
+					handleClientMessage();
 				}
 		    }
 		}
@@ -102,7 +98,7 @@ int Server::handleClientMessage()
 	if (bytes_received == 513)
 	{
 		if (!_validmsgflag)
-			send(_client_socket, "Error: message too long\n", 24, 0);
+			send(_client_socket, "Error: message too long max 512 char\n", 37, 0);
 		_validmsgflag = true;
 		return (0);
 	}
@@ -154,8 +150,10 @@ int Server::handleClientMessage()
 	return (0);
 }
 
-
 void Server::closeServer()
 {
-
+	for (size_t i = 0; i < _poll_fds.size(); ++i)
+        close(_poll_fds[i].fd);
+    _poll_fds.clear();
+    close(_server_fd);
 }

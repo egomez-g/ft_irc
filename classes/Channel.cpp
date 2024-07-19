@@ -7,6 +7,7 @@ Channel::Channel(std::string ChannelName)
 	_password = "";
 	_invite = false;
 	_clearanceTopic = false;
+	_clientSize = INT_MAX;
 }
 
 Channel::~Channel()
@@ -111,6 +112,14 @@ std::vector<Client>	Channel::getAdmins()
 	return (_admins);
 }
 
+int	Channel::getClientSize()
+{
+	return (_clientSize);
+}
+void	Channel::setClientSize(int new_size)
+{
+	_clientSize = new_size;
+}
 
 bool	Channel::isAdmin(std::string client)
 {

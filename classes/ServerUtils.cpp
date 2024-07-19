@@ -126,3 +126,8 @@ void	Server::addChannel(std::string channelName)
 	newChannel.addAdmin(*getClientByFd(_client_socket));
 	_channels.push_back(newChannel);
 }
+
+void Server::SetStop(bool state)
+{
+	_stop = state;
+}

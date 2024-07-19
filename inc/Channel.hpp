@@ -2,6 +2,7 @@
 
 #include "Server.hpp"
 #include "Client.hpp"
+#include "limits.h"
 
 class Client;
 
@@ -15,6 +16,7 @@ class Channel
 		std::string			_password;
 		bool				_invite;
 		bool				_clearanceTopic;
+		int					_clientSize;
 
 	public:
 		Channel(std::string ChannelName);
@@ -34,6 +36,9 @@ class Channel
 		std::vector<Client>	getClients();
 		std::string			getPassword();
 		std::vector<Client>	getAdmins();
+		int					getClientSize();
+		void				setClientSize(int new_size);
+
 
 		bool				getInvite();
 		bool				getClearanceTopic();
