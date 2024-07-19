@@ -37,6 +37,7 @@ void Server::Kick(std::string clientName, std::string channelName)
 void Server::Invite(std::string clientName, std::string channelName)
 {
 	std::string	msg;
+	bool created = false;
 
 
 	if (!getClientByUsername(clientName))
@@ -47,22 +48,36 @@ void Server::Invite(std::string clientName, std::string channelName)
 	}
 	if (!getChannelByName(channelName))
 	{
+		created = true;
 		addChannel(channelName);
 		getClientByFd(_client_socket)->setLoc(channelName);
+		msg = "<" + getClientByFd(_client_socket)->getUsername() + "> moved to: [" + channelName + "]\n";
+		send(_client_socket, msg.c_str(), msg.length(), 0);
 	}
-	if (getChannelByName(channelName)->getClients().size() <getChannelByName(channelName)->getClientSize())
+	if (getChannelByName(channelName)->getClients().size() < getChannelByName(channelName)->getClientSize())
 	{
 		if (clientName != getClientByFd(_client_socket)->getUsername())
 		{
-			getChannelByName(channelName)->setClient(*getClientByUsername(clientName));
-			msg = clientName + " added to: " + channelName + "\n";
+			if (!getChannelByName(channelName)->getChannelClientByName(clientName))
+			{
+				getChannelByName(channelName)->setClient(*getClientByUsername(clientName));
+				msg = "<" + clientName + ">" + " added to: [" + channelName + "]\n";
+			}
+			else
+				msg = "<" + clientName + ">" + " was already in [" + channelName + "]\n";
+			send(_client_socket, msg.c_str(), msg.length(), 0);
 		}
-		else
+		else if (!created)
+		{
 			msg = clientName + " was already in [" + channelName + "]\n";
+			send(_client_socket, msg.c_str(), msg.length(), 0);
+		}
 	}
 	else
+	{
 		msg = "[" + channelName + "] is full\n";
-	send(_client_socket, msg.c_str(), msg.length(), 0);
+		send(_client_socket, msg.c_str(), msg.length(), 0);
+	}
 }
 
 void Server::Topic()
@@ -89,23 +104,17 @@ void Server::Topic(std::vector<std::string> msgs)
 	
 	if (!channel)
 	{
-		msg = "[" + msgs[1] + "]: Channel doesn't exist\n";
+		msg = "Error: user isn't in any channel\n";
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 		return;
 	}
-	if (!channel->isAdmin(getClientByFd(_client_socket)->getUsername()))
+	if (!channel->isAdmin(getClientByFd(_client_socket)->getUsername()) && channel->getClearanceTopic())
 	{
 		msg = "[" + channel->getName() + "]: You have no permission\n";
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 		return;
 	}
 	
-	if (getClientByFd(_client_socket)->getLoc().empty())
-	{
-		msg = "Error: user isn't in any channel\n";
-		send(_client_socket, msg.c_str(), msg.length(), 0);
-		return;
-	}
 	for (unsigned long i = 1; i < msgs.size(); i++)
 		msg += msgs[i] + " ";
 	channel->setTopic(msg);
@@ -141,14 +150,14 @@ void Server::Mode(std::string flag, std::vector<std::string> msgs)
 	{
 		if (!channel->isAdmin(getClientByFd(_client_socket)->getUsername()))
 			msg = "[" + channel->getName() + "]: You have no permission\n";
-		else if (!channel->getInvite())
+		else if (!channel->getClearanceTopic())
 		{
-			channel->setInvite(true);
+			channel->setClearanceTopic(true);
 			msg = "[" + getClientByFd(_client_socket)->getLoc() + "]: Topic clearance active\n";
 		}
 		else
 		{
-			channel->setInvite(false);
+			channel->setClearanceTopic(false);
 			msg = "[" + getClientByFd(_client_socket)->getLoc() + "]: Topic clearance unactive\n";
 		}
 	}
@@ -287,12 +296,17 @@ void	Server::Join(std::string name)
 
 		if (channel->getClients().size() < channel->getClientSize())
 		{
-			getClientByFd(_client_socket)->setLoc(name);
-			channel->setClient(*getClientByFd(_client_socket));
-			msg = "Succesfully joined to: [" + name + "]\n";
+			if (channel->getChannelClientByName(name) == NULL)
+			{
+				getClientByFd(_client_socket)->setLoc(name);
+				channel->setClient(*getClientByFd(_client_socket));
+				msg = "Succesfully joined to: [" + name + "]\n";
+			}
+			else
+				msg = name + " was already in [" + channel->getName() + "]\n";
 		}
 		else
-			msg = name + " was already in [" + channel->getName() + "]\n";
+			msg = "No space in [" + channel->getName() + "]\n";
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 	}
 }

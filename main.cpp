@@ -43,4 +43,9 @@ int main(int argc, char **argv)
 /*
 -> Parsear bien los datos
 -> Ctrl+D buguea todo. ¿Se puede gestionar? (nope)
+
+
+erease client solo funciona en kick¿?¿?¿?¿?¿?¿?
+join bugg
+no te pide la passs random
 */

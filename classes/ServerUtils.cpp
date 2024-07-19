@@ -98,7 +98,10 @@ void Server::removeClient()
 	for (pingo = _channels.begin(); pingo != _channels.end(); pingo++)
 	{
 		if (pingo->getChannelClientByName(getClientByFd(_client_socket)->getUsername()))
+		{
 			pingo->eraseClient(*getClientByFd(_client_socket));
+			std::cout << "holaaa?" << std::endl;
+		}
 	}
 
 	for (it = _poll_fds.begin(); it != _poll_fds.end(); it++)
