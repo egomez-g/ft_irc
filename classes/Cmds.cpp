@@ -193,8 +193,8 @@ void Server::Mode(std::string flag, std::vector<std::string> msgs)
 			msg = "[" + channel->getName() + "]: You have no permission\n";
 		else
 		{
-			if (std::atoi(msgs[3].c_str()) < 1 ||
-				std::atoi(msgs[3].c_str()) > channel->getClients().size())
+			if (std::atol(msgs[3].c_str()) < 1 ||
+				std::atol(msgs[3].c_str()) > (long int)channel->getClients().size())
 				msg = "Not a valid size [MODE] [l] [size]\n";
 			else
 			{

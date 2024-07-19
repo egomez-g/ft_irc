@@ -16,7 +16,7 @@ class Channel
 		std::string			_password;
 		bool				_invite;
 		bool				_clearanceTopic;
-		int					_clientSize;
+		unsigned long int	_clientSize;
 
 	public:
 		Channel(std::string ChannelName);
@@ -36,8 +36,8 @@ class Channel
 		std::vector<Client>	getClients();
 		std::string			getPassword();
 		std::vector<Client>	getAdmins();
-		int					getClientSize();
-		void				setClientSize(int new_size);
+		unsigned long int	getClientSize();
+		void				setClientSize(unsigned long int new_size);
 
 
 		bool				getInvite();
