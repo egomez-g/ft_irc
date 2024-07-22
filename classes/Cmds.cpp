@@ -15,6 +15,12 @@ void Server::Kick(std::string clientName, std::string channelName)
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 		return ;
 	}
+	if (!getChannelByName(channelName)->getChannelClientByName(getClientByFd(_client_socket)->getUsername()))
+	{
+		msg = "error: you are not in <" + channelName + ">\n";
+		send(_client_socket, msg.c_str(), msg.length(), 0);
+		return ;
+	}
 
 	if (!getChannelByName(channelName)->isAdmin(clientName) ||
 		(getChannelByName(channelName)->isAdmin(clientName) &&
@@ -61,6 +67,7 @@ void Server::Invite(std::string clientName, std::string channelName)
 			if (!getChannelByName(channelName)->getChannelClientByName(clientName))
 			{
 				getChannelByName(channelName)->setClient(*getClientByUsername(clientName));
+				getClientByUsername(clientName)->setLoc(channelName);
 				msg = "<" + clientName + ">" + " added to: [" + channelName + "]\n";
 			}
 			else
@@ -114,11 +121,10 @@ void Server::Topic(std::vector<std::string> msgs)
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 		return;
 	}
-	
 	for (unsigned long i = 1; i < msgs.size(); i++)
 		msg += msgs[i] + " ";
 	channel->setTopic(msg);
-	msg = "Channel name changed to: " + msg + "\n";
+	msg = "Channel topic changed to: " + msg + "\n";
 	send(_client_socket, msg.c_str(), msg.length(), 0);
 }
 
@@ -221,16 +227,20 @@ void Server::Help()
 {
 	std::string	msg;
 	msg = "Available commands:\n";
-	msg += "\"[KICK] [username] [channel_name]\" \n";
-	msg += "\"[INV] [username] [channel_name]\" \n";
-	msg += "\"[TOPIC]\" \n";
-	msg += "\"[TOPIC] [new topic]\" \n";
-	msg += "\"[MODE] [flag]\" \n";
-	msg += "\"[PRIV] [username_msg]\" \n";
-	msg += "\"[MOVE] [channel_name]\" \n";
-	msg += "\"[JOIN] [channel_name]\" \n";
-	msg += "\"[NICK] [new nickname]\" \n";
-	msg += "\"[HELP]\" \n";
+	msg += "[KICK]  [username] [channel_name]	Kick user from channel\n";
+	msg += "[INV]   [username] [channel_name]	Invite user to channel\n";
+	msg += "[TOPIC] 							Print channel topic\n";
+	msg += "[TOPIC] [new topic]					Set channel topic\n";
+	msg += "[MODE]  [i]							Set/remove Invite-only channel \n";
+	msg += "[MODE]  [t] 						Set/remove TOPIC restrictions \n";
+	msg += "[MODE]  [k]							Set/remove the channel key \n";
+	msg += "[MODE]  [o] [username]				Give/take channel operator privilege\n";
+	msg += "[MODE]  [l] [size]					Set/remove the user limit to channel\n";
+	msg += "[PRIV]  [username_msg] 				Send private msg to user\n";
+	msg += "[MOVE]  [channel_name] 				Move to a channel\n";
+	msg += "[JOIN]  [channel_name] 				Join to a channel\n";
+	msg += "[NICK]  [new nickname] 				Set nickname\n";
+	msg += "[HELP]\" \n";
 	send(_client_socket, msg.c_str(), msg.length(), 0);
 }
 
@@ -341,14 +351,16 @@ void	Server::Join(std::string name, std::string password)
 void	Server::Nick(std::string nickname)
 {
 	std::string	msg;
-	if (!getClientByNickname(nickname))
+	if (nickname == "")
+		send(_client_socket, "Can't set NULL nickname\n", 35, 0);
+	else if (getClientByNickname(nickname))
+		send(_client_socket, "Nickname already in use, try again\n", 35, 0);
+	else
 	{
 		getClientByFd(_client_socket)->setNickname(nickname);
 		msg = "Nickname changed to <" + nickname + ">\n";
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 	}
-	else
-		send(_client_socket, "Nickname already in use, try again\n", 35, 0);
 }
 
 void	Server::sendToAll(std::vector<std::string> msgs)

@@ -93,15 +93,12 @@ void Server::removeClient()
 	std::vector<pollfd>::iterator it;
 	std::vector<Client>::iterator aux;
 
-	std::vector<Channel>::iterator pingo;
+	std::vector<Channel>::iterator channel_it;
 	
-	for (pingo = _channels.begin(); pingo != _channels.end(); pingo++)
+	for (channel_it = _channels.begin(); channel_it != _channels.end(); channel_it++)
 	{
-		if (pingo->getChannelClientByName(getClientByFd(_client_socket)->getUsername()))
-		{
-			pingo->eraseClient(*getClientByFd(_client_socket));
-			std::cout << "holaaa?" << std::endl;
-		}
+		if (channel_it->getChannelClientByName(getClientByFd(_client_socket)->getUsername()))
+			channel_it->eraseClient(*getClientByFd(_client_socket));
 	}
 
 	for (it = _poll_fds.begin(); it != _poll_fds.end(); it++)
@@ -127,6 +124,7 @@ void	Server::addChannel(std::string channelName)
 
 	newChannel.setClient(*getClientByFd(_client_socket));
 	newChannel.addAdmin(*getClientByFd(_client_socket));
+	newChannel.setTopic("Empty topic");
 	_channels.push_back(newChannel);
 }
 

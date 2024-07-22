@@ -72,6 +72,14 @@ void	Channel::eraseClient(Client client)
 		if (client == i)
 		{
 			_clients.erase(i);
+			break ;
+		}
+	}
+	for (i = _admins.begin(); i != _admins.end(); i++)
+	{
+		if (client == i)
+		{
+			_clients.erase(i);
 			return ;
 		}
 	}

@@ -48,4 +48,12 @@ int main(int argc, char **argv)
 erease client solo funciona en kick¿?¿?¿?¿?¿?¿?
 join bugg
 no te pide la passs random
+
+
+
+solucionado:
+inv no mueve al q invitas
+puedes echar a gente d un grupo en el q no estas
+ya no se guarda la info si te sales???¿??¿?¿?¿
+topic
 */
