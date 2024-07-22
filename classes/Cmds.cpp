@@ -60,6 +60,12 @@ void Server::Invite(std::string clientName, std::string channelName)
 		msg = "<" + getClientByFd(_client_socket)->getUsername() + "> moved to: [" + channelName + "]\n";
 		send(_client_socket, msg.c_str(), msg.length(), 0);
 	}
+	if (!created && !getChannelByName(channelName)->getChannelClientByName(getClientByFd(_client_socket)->getUsername()))
+	{
+		msg = "Error, trying to invite to a channel you're not in\n";
+		send(_client_socket, msg.c_str(), msg.length(), 0);
+		return ;
+	}
 	if (getChannelByName(channelName)->getClients().size() < getChannelByName(channelName)->getClientSize())
 	{
 		if (clientName != getClientByFd(_client_socket)->getUsername())
@@ -233,12 +239,12 @@ void Server::Help()
 	msg += "[TOPIC] [new topic]					Set channel topic\n";
 	msg += "[MODE]  [i]							Set/remove Invite-only channel \n";
 	msg += "[MODE]  [t] 						Set/remove TOPIC restrictions \n";
-	msg += "[MODE]  [k]							Set/remove the channel key \n";
+	msg += "[MODE]  [k]	[password]				Set/remove the channel key \n";
 	msg += "[MODE]  [o] [username]				Give/take channel operator privilege\n";
 	msg += "[MODE]  [l] [size]					Set/remove the user limit to channel\n";
 	msg += "[PRIV]  [username_msg] 				Send private msg to user\n";
 	msg += "[MOVE]  [channel_name] 				Move to a channel\n";
-	msg += "[JOIN]  [channel_name] 				Join to a channel\n";
+	msg += "[JOIN]  [channel_name] [password]	Join to a channel\n";
 	msg += "[NICK]  [new nickname] 				Set nickname\n";
 	msg += "[HELP]\" \n";
 	send(_client_socket, msg.c_str(), msg.length(), 0);

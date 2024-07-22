@@ -67,22 +67,22 @@ void	Channel::eraseClient(Client client)
 {
 	std::vector<Client>::iterator i;
 
-	for (i = _clients.begin(); i != _clients.end(); i++)
+	for (i = _admins.begin(); i != _admins.end(); i++)
 	{
 		if (client == i)
 		{
 			_clients.erase(i);
 			break ;
 		}
-	}
-	for (i = _admins.begin(); i != _admins.end(); i++)
+	}	
+	for (i = _clients.begin(); i != _clients.end(); i++)
 	{
 		if (client == i)
 		{
 			_clients.erase(i);
 			return ;
 		}
-	}
+	}	
 }
 
 std::string	Channel::getTopic()
