@@ -39,7 +39,6 @@ int Server::initServer(char **argv)
 	return (0);
 }
 
-
 int Server::listenLoop()
 {
 	while (!_stop)
@@ -108,6 +107,7 @@ int Server::handleClientMessage()
 		return(0);
 	}
 	msg = buffer;
+	std::cout << "xd: " << msg << " :xd " << std::endl;
 	if (msg == "EXIT")
 	{
 		removeClient();
@@ -144,9 +144,8 @@ int Server::handleClientMessage()
 			send(_client_socket, "Username already exists, try again\n", 35, 0);
 	}
 	else
-	{
 		parseCmd(buffer);
-	}
+
 	return (0);
 }
 

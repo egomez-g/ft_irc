@@ -1,4 +1,3 @@
-
 #include "inc/Client.hpp"
 #include "inc/Server.hpp"
 #include "inc/Channel.hpp"
@@ -13,7 +12,6 @@ void	int_handler(int sig)
 
 int main(int argc, char **argv)
 {
-
 	if (argc != 3)
 	{
 		std::cout << "Error, wrong number of arguments.\n";
@@ -38,22 +36,3 @@ int main(int argc, char **argv)
 	server.closeServer();
 	return (0);
 }
-
-
-/*
--> Parsear bien los datos
--> Ctrl+D buguea todo. ¿Se puede gestionar? (nope)
-
-
-erease client solo funciona en kick¿?¿?¿?¿?¿?¿?
-join bugg
-no te pide la passs random
-
-
-
-solucionado:
-inv no mueve al q invitas
-puedes echar a gente d un grupo en el q no estas
-ya no se guarda la info si te sales???¿??¿?¿?¿
-topic
-*/

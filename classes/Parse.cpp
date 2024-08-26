@@ -112,9 +112,7 @@ void	Server::parseCmd(char *cmd)
 					Join(aux[1]);
 			}
 			else
-			{
 				send(_client_socket, "Channel doesn't exist\n", 22, 0);
-			}
 		}
 	}
 	else if (aux[0] == "NICK")

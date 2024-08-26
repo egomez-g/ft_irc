@@ -1,0 +1,28 @@
+/*
+-> Parsear bien los datos ¿?¿?¿??¿?
+
+-> quitar el :xd xd: de los msgs
+
+
+//_____________________________________________________
+
+
+solucionado:
+
+-> Ctrl+D buguea todo. ¿Se puede gestionar? -> es problema del netcat ejecutar con nc -N
+
+inv no mueve al q invitas
+puedes echar a gente d un grupo en el q no estas
+ya no se guarda la info si te sales???¿??¿?¿?¿
+topic
+erease client solo funciona en kick¿?¿?¿?¿?¿?¿?
+join bugg
+no te pide la passs random
+
+
+//_____________________________________________
+
+Pasos para preparar weechat:
+	docker run -it weechat/weechat
+	morir
+*/
