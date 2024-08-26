@@ -83,6 +83,16 @@ int Server::handleClientMessage()
         return (0);
     }
 
+	int asd = 0;
+	while (asd < bytes_received)
+	{
+		if (buffer[asd] == '\r')
+			buffer[asd] = '\0';
+	//		std::cout << buffer[asd];
+		asd++;
+	}
+
+
 	if (buffer[bytes_received - 2] == '\n')
 		buffer[bytes_received - 2] = '\0';
 	else
@@ -107,7 +117,7 @@ int Server::handleClientMessage()
 		return(0);
 	}
 	msg = buffer;
-	std::cout << "xd: " << msg << " :xd " << std::endl;
+	std::cout << msg << std::endl;
 	if (msg == "EXIT")
 	{
 		removeClient();
