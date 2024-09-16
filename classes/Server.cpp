@@ -70,8 +70,17 @@ int Server::handleClientMessage()
 
 	std::string msg;
 
+	int flag = 0;
+
     char buffer[513] = {0};
-    int bytes_received = recv(_client_socket, buffer, sizeof(buffer), 0);
+    int bytes_received = 0;
+
+	while (flag == 0)
+	{
+		bytes_received = recv(_client_socket, buffer, sizeof(buffer), 0);
+		if (std::strchr(buffer, '\n'))
+			flag = 1;
+	}
 
 	if (bytes_received <= 0)
 	{
@@ -88,10 +97,14 @@ int Server::handleClientMessage()
 	{
 		if (buffer[asd] == '\r')
 			buffer[asd] = '\0';
-	//		std::cout << buffer[asd];
 		asd++;
 	}
 
+	// if (buffer[bytes_received - 2] != '\n' && buffer[bytes_received - 1] != '\n')
+	// {
+	// 	msg += buffer;
+	// 	return (0);
+	// }
 
 	if (buffer[bytes_received - 2] == '\n')
 		buffer[bytes_received - 2] = '\0';
@@ -116,8 +129,7 @@ int Server::handleClientMessage()
 		_validmsgflag = false;
 		return(0);
 	}
-	msg = buffer;
-	std::cout << msg << std::endl;
+	msg += buffer;
 	if (msg == "EXIT")
 	{
 		removeClient();
